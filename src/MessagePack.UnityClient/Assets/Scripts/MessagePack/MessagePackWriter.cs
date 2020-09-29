@@ -3,13 +3,9 @@
 
 using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using MessagePack.Internal;
-using Microsoft;
 
 namespace MessagePack
 {
@@ -30,6 +26,12 @@ namespace MessagePack
         /// The writer to use.
         /// </summary>
         private BufferWriter writer;
+
+        /// <summary>
+        /// The cache to store references.
+        /// nullable.
+        /// </summary>
+        private MessagePackReferenceCache cache;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MessagePackWriter"/> struct.
@@ -80,6 +82,28 @@ namespace MessagePack
         /// Ensures everything previously written has been flushed to the underlying <see cref="IBufferWriter{T}"/>.
         /// </summary>
         public void Flush() => this.writer.Commit();
+
+        public MessagePackReferenceCache Cache
+        {
+            get
+            {
+                if (cache is null)
+                {
+                    cache = MessagePackReferenceCache.Rent();
+                }
+
+                return cache;
+            }
+        }
+
+        public void Dispose()
+        {
+            if (!(cache is null))
+            {
+                MessagePackReferenceCache.Return(cache);
+                cache = default;
+            }
+        }
 
         /// <summary>
         /// Writes a <see cref="MessagePackCode.Nil"/> value.

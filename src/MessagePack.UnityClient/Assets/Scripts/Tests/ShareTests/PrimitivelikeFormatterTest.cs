@@ -67,15 +67,32 @@ namespace MessagePack.Tests
             using (var sequence = new Sequence<byte>())
             {
                 var oldSpecWriter = new MessagePackWriter(sequence) { OldSpec = true };
-                MessagePackSerializer.Serialize(ref oldSpecWriter, data);
-                oldSpecWriter.Flush();
+                try
+                {
+                    MessagePackSerializer.Serialize(ref oldSpecWriter, data);
+                    oldSpecWriter.Flush();
+                }
+                finally
+                {
+                    oldSpecWriter.Dispose();
+                }
+
                 var a = sequence.AsReadOnlySequence.ToArray();
                 var b = serializer.PackSingleObject(data);
 
                 a.Is(b);
 
+                string r1;
                 var oldSpecReader = new MessagePackReader(sequence.AsReadOnlySequence);
-                var r1 = MessagePackSerializer.Deserialize<string>(ref oldSpecReader);
+                try
+                {
+                    r1 = MessagePackSerializer.Deserialize<string>(ref oldSpecReader);
+                }
+                finally
+                {
+                    oldSpecReader.Dispose();
+                }
+
                 var r2 = serializer.UnpackSingleObject(b);
 
                 r1.Is(r2);
@@ -94,9 +111,10 @@ namespace MessagePack.Tests
 
             MsgPack.Serialization.MessagePackSerializer<byte[]> serializer = referenceContext.GetSerializer<byte[]>();
 
-            using (var sequence = new Sequence<byte>())
+            var sequence = new Sequence<byte>();
+            var oldSpecWriter = new MessagePackWriter(sequence) { OldSpec = true };
+            try
             {
-                var oldSpecWriter = new MessagePackWriter(sequence) { OldSpec = true };
                 MessagePackSerializer.Serialize(ref oldSpecWriter, data);
                 oldSpecWriter.Flush();
                 var a = sequence.AsReadOnlySequence.ToArray();
@@ -104,11 +122,25 @@ namespace MessagePack.Tests
 
                 a.Is(b);
 
+                byte[] r1;
                 var oldSpecReader = new MessagePackReader(sequence.AsReadOnlySequence);
-                var r1 = MessagePackSerializer.Deserialize<byte[]>(ref oldSpecReader);
+                try
+                {
+                    r1 = MessagePackSerializer.Deserialize<byte[]>(ref oldSpecReader);
+                }
+                finally
+                {
+                    oldSpecReader.Dispose();
+                }
+
                 var r2 = serializer.UnpackSingleObject(b);
 
                 r1.Is(r2);
+            }
+            finally
+            {
+                oldSpecWriter.Dispose();
+                sequence.Dispose();
             }
         }
 

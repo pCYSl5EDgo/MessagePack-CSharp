@@ -66,10 +66,17 @@ namespace MessagePack
             if (this.ReadData.Length > 0)
             {
                 var reader = new MessagePackReader(this.ReadData);
-                if (reader.TryReadArrayHeader(out length))
+                try
                 {
-                    this.endOfLastMessage = reader.Position;
-                    return true;
+                    if (reader.TryReadArrayHeader(out length))
+                    {
+                        this.endOfLastMessage = reader.Position;
+                        return true;
+                    }
+                }
+                finally
+                {
+                    reader.Dispose();
                 }
             }
 

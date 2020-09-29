@@ -20,13 +20,19 @@ namespace MessagePack.Tests
         {
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
-
-            writer.WriteArrayHeader(ArrayContent.Count);
-
-            for (int i = 0; i < ArrayContent.Count; i++)
+            try
             {
-                MessagePackSerializer.Serialize(ref writer, ArrayContent[i]);
-                writer.Flush();
+                writer.WriteArrayHeader(ArrayContent.Count);
+
+                for (int i = 0; i < ArrayContent.Count; i++)
+                {
+                    MessagePackSerializer.Serialize(ref writer, ArrayContent[i]);
+                    writer.Flush();
+                }
+            }
+            finally
+            {
+                writer.Dispose();
             }
 
             this.arraySequence = sequence;

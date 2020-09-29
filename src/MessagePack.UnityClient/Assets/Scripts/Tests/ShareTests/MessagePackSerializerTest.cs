@@ -31,27 +31,41 @@ namespace MessagePack.Tests
             var ms = new MemoryStream();
             var writerBytes = new Sequence<byte>();
             var writer = new MessagePackWriter(writerBytes);
+            try
+            {
+                var data1 = MessagePackSerializer.Deserialize(t, MessagePackSerializer.Serialize(t, data)) as FirstSimpleData;
+                var data2 = MessagePackSerializer.Deserialize(t, MessagePackSerializer.Serialize(t, data, StandardResolver.Options)) as FirstSimpleData;
 
-            var data1 = MessagePackSerializer.Deserialize(t, MessagePackSerializer.Serialize(t, data)) as FirstSimpleData;
-            var data2 = MessagePackSerializer.Deserialize(t, MessagePackSerializer.Serialize(t, data, StandardResolver.Options)) as FirstSimpleData;
+                MessagePackSerializer.Serialize(t, ms, data);
+                ms.Position = 0;
+                var data3 = MessagePackSerializer.Deserialize(t, ms) as FirstSimpleData;
 
-            MessagePackSerializer.Serialize(t, ms, data);
-            ms.Position = 0;
-            var data3 = MessagePackSerializer.Deserialize(t, ms) as FirstSimpleData;
+                ms = new MemoryStream();
+                MessagePackSerializer.Serialize(t, ms, data, StandardResolver.Options);
+                ms.Position = 0;
+                var data4 = MessagePackSerializer.Deserialize(t, ms, StandardResolver.Options) as FirstSimpleData;
 
-            ms = new MemoryStream();
-            MessagePackSerializer.Serialize(t, ms, data, StandardResolver.Options);
-            ms.Position = 0;
-            var data4 = MessagePackSerializer.Deserialize(t, ms, StandardResolver.Options) as FirstSimpleData;
+                MessagePackSerializer.Serialize(t, ref writer, data, StandardResolver.Options);
+                writer.Flush();
 
-            MessagePackSerializer.Serialize(t, ref writer, data, StandardResolver.Options);
-            writer.Flush();
-            var reader = new MessagePackReader(writerBytes.AsReadOnlySequence);
-            var data5 = MessagePackSerializer.Deserialize(t, ref reader, StandardResolver.Options) as FirstSimpleData;
+                var reader = new MessagePackReader(writerBytes.AsReadOnlySequence);
+                try
+                {
+                    var data5 = MessagePackSerializer.Deserialize(t, ref reader, StandardResolver.Options) as FirstSimpleData;
 
-            new[] { data1.Prop1, data2.Prop1, data3.Prop1, data4.Prop1, data5.Prop1 }.Distinct().Is(data.Prop1);
-            new[] { data1.Prop2, data2.Prop2, data3.Prop2, data4.Prop2, data5.Prop2 }.Distinct().Is(data.Prop2);
-            new[] { data1.Prop3, data2.Prop3, data3.Prop3, data4.Prop3, data5.Prop3 }.Distinct().Is(data.Prop3);
+                    new[] { data1.Prop1, data2.Prop1, data3.Prop1, data4.Prop1, data5.Prop1 }.Distinct().Is(data.Prop1);
+                    new[] { data1.Prop2, data2.Prop2, data3.Prop2, data4.Prop2, data5.Prop2 }.Distinct().Is(data.Prop2);
+                    new[] { data1.Prop3, data2.Prop3, data3.Prop3, data4.Prop3, data5.Prop3 }.Distinct().Is(data.Prop3);
+                }
+                finally
+                {
+                    reader.Dispose();
+                }
+            }
+            finally
+            {
+                writer.Dispose();
+            }
         }
 
         [Fact]
@@ -279,13 +293,20 @@ namespace MessagePack.Tests
 
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
-            for (int i = 0; i <= maxDepth; i++)
+            try
             {
-                recursiveWriteOperation(ref writer);
-            }
+                for (int i = 0; i <= maxDepth; i++)
+                {
+                    recursiveWriteOperation(ref writer);
+                }
 
-            writer.Write(1);
-            writer.Flush();
+                writer.Write(1);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
 
             return (sequence.AsReadOnlySequence, options);
         }
@@ -295,7 +316,14 @@ namespace MessagePack.Tests
             var ex = Assert.Throws<MessagePackSerializationException>(() =>
             {
                 var reader = new MessagePackReader(sequence);
-                return MessagePackSerializer.Deserialize<object>(ref reader, options);
+                try
+                {
+                    return MessagePackSerializer.Deserialize<object>(ref reader, options);
+                }
+                finally
+                {
+                    reader.Dispose();
+                }
             });
             Assert.IsType<InsufficientExecutionStackException>(ex.InnerException);
         }
@@ -305,7 +333,14 @@ namespace MessagePack.Tests
             var ex = Assert.Throws<MessagePackSerializationException>(() =>
             {
                 var reader = new MessagePackReader(sequence);
-                MessagePackSerializer.ConvertToJson(ref reader, new StringWriter(), options);
+                try
+                {
+                    MessagePackSerializer.ConvertToJson(ref reader, new StringWriter(), options);
+                }
+                finally
+                {
+                    reader.Dispose();
+                }
             });
             Assert.IsType<InsufficientExecutionStackException>(ex.InnerException);
         }

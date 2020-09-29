@@ -122,12 +122,31 @@ string GetMinValue(Type intType) => $"0x{intType.GetField(nameof(int.MinValue)).
                 this.logger.WriteLine("Decoding 0x{0:x} from {1}", value, MessagePackCode.ToFormatName(encoded.First.Span[0]));
                 if (value <= <#=t1.Name#>.MaxValue && value >= <#=t1.Name#>.MinValue)
                 {
-                    Assert.Equal(value, new MessagePackReader(encoded).Read<#=t1.Name#>());
+                    var reader = new MessagePackReader(encoded);
+                    try
+                    {
+                        Assert.Equal(value, reader.Read<#=t1.Name#>());
+                    }
+                    finally
+                    {
+                        reader.Dispose();
+                    }
                 }
                 else
                 {
 #if !ENABLE_IL2CPP
-                    Assert.Throws<OverflowException>(() => new MessagePackReader(encoded).Read<#=t1.Name#>());
+                    Assert.Throws<OverflowException>(() =>
+                    {
+                        var reader = new MessagePackReader(encoded);
+                        try
+                        {
+                            return reader.Read<#=t1.Name#>();
+                        }
+                        finally
+                        {
+                            reader.Dispose();
+                        }
+                    });
 #endif
                 }
             }
@@ -136,7 +155,18 @@ string GetMinValue(Type intType) => $"0x{intType.GetField(nameof(int.MinValue)).
         [Fact]
         public void Read<#=t1.Name#>_ThrowsOnUnexpectedCode()
         {
-            Assert.Throws<MessagePackSerializationException>(() => new MessagePackReader(StringEncodedAsFixStr).Read<#=t1.Name#>());
+            Assert.Throws<MessagePackSerializationException>(() =>
+            {
+                var reader = new MessagePackReader(StringEncodedAsFixStr);
+                try
+                {
+                    return reader.Read<#=t1.Name#>();
+                }
+                finally
+                {
+                    reader.Dispose();
+                }
+            });
         }
 <# } #>
     }

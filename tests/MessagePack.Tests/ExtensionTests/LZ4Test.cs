@@ -40,8 +40,18 @@ namespace MessagePack.Tests.ExtensionTests
             var lz4Data = MessagePackSerializer.Serialize(originalData, LZ4Standard);
 
             PeekMessagePackType(lz4Data).Is(MessagePackType.Extension);
+
+            ExtensionHeader header;
             var lz4DataReader = new MessagePackReader(lz4Data);
-            ExtensionHeader header = lz4DataReader.ReadExtensionFormatHeader();
+            try
+            {
+                header = lz4DataReader.ReadExtensionFormatHeader();
+            }
+            finally
+            {
+                lz4DataReader.Dispose();
+            }
+
             header.TypeCode.Is(ThisLibraryExtensionTypeCodes.Lz4Block);
 
             var decompress = MessagePackSerializer.Deserialize<int[]>(lz4Data, LZ4Standard);
@@ -57,8 +67,18 @@ namespace MessagePack.Tests.ExtensionTests
             var lz4Data = MessagePackSerializer.Serialize(typeof(FirstSimpleData[]), originalData, LZ4Standard);
 
             PeekMessagePackType(lz4Data).Is(MessagePackType.Extension);
+
+            ExtensionHeader header;
             var lz4DataReader = new MessagePackReader(lz4Data);
-            ExtensionHeader header = lz4DataReader.ReadExtensionFormatHeader();
+            try
+            {
+                header = lz4DataReader.ReadExtensionFormatHeader();
+            }
+            finally
+            {
+                lz4DataReader.Dispose();
+            }
+
             header.TypeCode.Is(ThisLibraryExtensionTypeCodes.Lz4Block);
 
             var decompress = MessagePackSerializer.Deserialize(typeof(FirstSimpleData[]), lz4Data, LZ4Standard);
@@ -122,7 +142,14 @@ namespace MessagePack.Tests.ExtensionTests
         private static MessagePackType PeekMessagePackType(byte[] msgpackBuffer)
         {
             var reader = new MessagePackReader(new ReadOnlySequence<byte>(msgpackBuffer));
-            return reader.NextMessagePackType;
+            try
+            {
+                return reader.NextMessagePackType;
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]

@@ -241,36 +241,82 @@ namespace MessagePack.Tests
 
             var sequenceA = new Sequence<byte>();
             var sequenceAWriter = new MessagePackWriter(sequenceA);
-            sequenceAWriter.Write(a);
-            sequenceAWriter.Flush();
+
+            try
+            {
+                sequenceAWriter.Write(a);
+                sequenceAWriter.Flush();
+            }
+            finally
+            {
+                sequenceAWriter.Dispose();
+            }
+
             sequenceA.Length.Is(Encoding.UTF8.GetByteCount(a) + 1);
 
             var sequenceB = new Sequence<byte>();
             var sequenceBWriter = new MessagePackWriter(sequenceB);
-            sequenceBWriter.Write(b);
-            sequenceBWriter.Flush();
+
+            try
+            {
+                sequenceBWriter.Write(b);
+                sequenceBWriter.Flush();
+            }
+            finally
+            {
+                sequenceBWriter.Dispose();
+            }
+
             sequenceB.Length.Is(Encoding.UTF8.GetByteCount(b) + 2);
 
             var sequenceC = new Sequence<byte>();
             var sequenceCWriter = new MessagePackWriter(sequenceC);
-            sequenceCWriter.Write(c);
-            sequenceCWriter.Flush();
+
+            try
+            {
+                sequenceCWriter.Write(c);
+                sequenceCWriter.Flush();
+            }
+            finally
+            {
+                sequenceCWriter.Dispose();
+            }
+
             sequenceC.Length.Is(Encoding.UTF8.GetByteCount(c) + 3);
 
             var sequenceD = new Sequence<byte>();
             var sequenceDWriter = new MessagePackWriter(sequenceD);
-            sequenceDWriter.Write(d);
-            sequenceDWriter.Flush();
+
+            try
+            {
+                sequenceDWriter.Write(d);
+                sequenceDWriter.Flush();
+            }
+            finally
+            {
+                sequenceDWriter.Dispose();
+            }
+
             sequenceD.Length.Is(Encoding.UTF8.GetByteCount(d) + 5);
 
             var readerA = new MessagePackReader(sequenceA.AsReadOnlySequence);
             var readerB = new MessagePackReader(sequenceB.AsReadOnlySequence);
             var readerC = new MessagePackReader(sequenceC.AsReadOnlySequence);
             var readerD = new MessagePackReader(sequenceD.AsReadOnlySequence);
-            readerA.ReadString().Is(a);
-            readerB.ReadString().Is(b);
-            readerC.ReadString().Is(c);
-            readerD.ReadString().Is(d);
+            try
+            {
+                readerA.ReadString().Is(a);
+                readerB.ReadString().Is(b);
+                readerC.ReadString().Is(c);
+                readerD.ReadString().Is(d);
+            }
+            finally
+            {
+                readerA.Dispose();
+                readerB.Dispose();
+                readerC.Dispose();
+                readerD.Dispose();
+            }
         }
 
         // https://github.com/neuecc/MessagePack-CSharp/issues/22

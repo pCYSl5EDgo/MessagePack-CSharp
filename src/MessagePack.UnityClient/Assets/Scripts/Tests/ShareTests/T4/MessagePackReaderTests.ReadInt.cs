@@ -150,12 +150,31 @@ namespace MessagePack.Tests
                 this.logger.WriteLine("Decoding 0x{0:x} from {1}", value, MessagePackCode.ToFormatName(encoded.First.Span[0]));
                 if (value <= Byte.MaxValue && value >= Byte.MinValue)
                 {
-                    Assert.Equal(value, new MessagePackReader(encoded).ReadByte());
+                    var reader = new MessagePackReader(encoded);
+                    try
+                    {
+                        Assert.Equal(value, reader.ReadByte());
+                    }
+                    finally
+                    {
+                        reader.Dispose();
+                    }
                 }
                 else
                 {
 #if !ENABLE_IL2CPP
-                    Assert.Throws<OverflowException>(() => new MessagePackReader(encoded).ReadByte());
+                    Assert.Throws<OverflowException>(() =>
+                    {
+                        var reader = new MessagePackReader(encoded);
+                        try
+                        {
+                            return reader.ReadByte();
+                        }
+                        finally
+                        {
+                            reader.Dispose();
+                        }
+                    });
 #endif
                 }
             }
@@ -164,7 +183,18 @@ namespace MessagePack.Tests
         [Fact]
         public void ReadByte_ThrowsOnUnexpectedCode()
         {
-            Assert.Throws<MessagePackSerializationException>(() => new MessagePackReader(StringEncodedAsFixStr).ReadByte());
+            Assert.Throws<MessagePackSerializationException>(() =>
+            {
+                var reader = new MessagePackReader(StringEncodedAsFixStr);
+                try
+                {
+                    return reader.ReadByte();
+                }
+                finally
+                {
+                    reader.Dispose();
+                }
+            });
         }
 
         [Fact]
@@ -175,12 +205,31 @@ namespace MessagePack.Tests
                 this.logger.WriteLine("Decoding 0x{0:x} from {1}", value, MessagePackCode.ToFormatName(encoded.First.Span[0]));
                 if (value <= UInt16.MaxValue && value >= UInt16.MinValue)
                 {
-                    Assert.Equal(value, new MessagePackReader(encoded).ReadUInt16());
+                    var reader = new MessagePackReader(encoded);
+                    try
+                    {
+                        Assert.Equal(value, reader.ReadUInt16());
+                    }
+                    finally
+                    {
+                        reader.Dispose();
+                    }
                 }
                 else
                 {
 #if !ENABLE_IL2CPP
-                    Assert.Throws<OverflowException>(() => new MessagePackReader(encoded).ReadUInt16());
+                    Assert.Throws<OverflowException>(() =>
+                    {
+                        var reader = new MessagePackReader(encoded);
+                        try
+                        {
+                            return reader.ReadUInt16();
+                        }
+                        finally
+                        {
+                            reader.Dispose();
+                        }
+                    });
 #endif
                 }
             }
@@ -189,7 +238,18 @@ namespace MessagePack.Tests
         [Fact]
         public void ReadUInt16_ThrowsOnUnexpectedCode()
         {
-            Assert.Throws<MessagePackSerializationException>(() => new MessagePackReader(StringEncodedAsFixStr).ReadUInt16());
+            Assert.Throws<MessagePackSerializationException>(() =>
+            {
+                var reader = new MessagePackReader(StringEncodedAsFixStr);
+                try
+                {
+                    return reader.ReadUInt16();
+                }
+                finally
+                {
+                    reader.Dispose();
+                }
+            });
         }
 
         [Fact]
@@ -200,12 +260,31 @@ namespace MessagePack.Tests
                 this.logger.WriteLine("Decoding 0x{0:x} from {1}", value, MessagePackCode.ToFormatName(encoded.First.Span[0]));
                 if (value <= UInt32.MaxValue && value >= UInt32.MinValue)
                 {
-                    Assert.Equal(value, new MessagePackReader(encoded).ReadUInt32());
+                    var reader = new MessagePackReader(encoded);
+                    try
+                    {
+                        Assert.Equal(value, reader.ReadUInt32());
+                    }
+                    finally
+                    {
+                        reader.Dispose();
+                    }
                 }
                 else
                 {
 #if !ENABLE_IL2CPP
-                    Assert.Throws<OverflowException>(() => new MessagePackReader(encoded).ReadUInt32());
+                    Assert.Throws<OverflowException>(() =>
+                    {
+                        var reader = new MessagePackReader(encoded);
+                        try
+                        {
+                            return reader.ReadUInt32();
+                        }
+                        finally
+                        {
+                            reader.Dispose();
+                        }
+                    });
 #endif
                 }
             }
@@ -214,7 +293,18 @@ namespace MessagePack.Tests
         [Fact]
         public void ReadUInt32_ThrowsOnUnexpectedCode()
         {
-            Assert.Throws<MessagePackSerializationException>(() => new MessagePackReader(StringEncodedAsFixStr).ReadUInt32());
+            Assert.Throws<MessagePackSerializationException>(() =>
+            {
+                var reader = new MessagePackReader(StringEncodedAsFixStr);
+                try
+                {
+                    return reader.ReadUInt32();
+                }
+                finally
+                {
+                    reader.Dispose();
+                }
+            });
         }
 
         [Fact]
@@ -225,12 +315,31 @@ namespace MessagePack.Tests
                 this.logger.WriteLine("Decoding 0x{0:x} from {1}", value, MessagePackCode.ToFormatName(encoded.First.Span[0]));
                 if (value <= UInt64.MaxValue && value >= UInt64.MinValue)
                 {
-                    Assert.Equal(value, new MessagePackReader(encoded).ReadUInt64());
+                    var reader = new MessagePackReader(encoded);
+                    try
+                    {
+                        Assert.Equal(value, reader.ReadUInt64());
+                    }
+                    finally
+                    {
+                        reader.Dispose();
+                    }
                 }
                 else
                 {
 #if !ENABLE_IL2CPP
-                    Assert.Throws<OverflowException>(() => new MessagePackReader(encoded).ReadUInt64());
+                    Assert.Throws<OverflowException>(() =>
+                    {
+                        var reader = new MessagePackReader(encoded);
+                        try
+                        {
+                            return reader.ReadUInt64();
+                        }
+                        finally
+                        {
+                            reader.Dispose();
+                        }
+                    });
 #endif
                 }
             }
@@ -239,7 +348,18 @@ namespace MessagePack.Tests
         [Fact]
         public void ReadUInt64_ThrowsOnUnexpectedCode()
         {
-            Assert.Throws<MessagePackSerializationException>(() => new MessagePackReader(StringEncodedAsFixStr).ReadUInt64());
+            Assert.Throws<MessagePackSerializationException>(() =>
+            {
+                var reader = new MessagePackReader(StringEncodedAsFixStr);
+                try
+                {
+                    return reader.ReadUInt64();
+                }
+                finally
+                {
+                    reader.Dispose();
+                }
+            });
         }
 
         [Fact]
@@ -250,12 +370,31 @@ namespace MessagePack.Tests
                 this.logger.WriteLine("Decoding 0x{0:x} from {1}", value, MessagePackCode.ToFormatName(encoded.First.Span[0]));
                 if (value <= SByte.MaxValue && value >= SByte.MinValue)
                 {
-                    Assert.Equal(value, new MessagePackReader(encoded).ReadSByte());
+                    var reader = new MessagePackReader(encoded);
+                    try
+                    {
+                        Assert.Equal(value, reader.ReadSByte());
+                    }
+                    finally
+                    {
+                        reader.Dispose();
+                    }
                 }
                 else
                 {
 #if !ENABLE_IL2CPP
-                    Assert.Throws<OverflowException>(() => new MessagePackReader(encoded).ReadSByte());
+                    Assert.Throws<OverflowException>(() =>
+                    {
+                        var reader = new MessagePackReader(encoded);
+                        try
+                        {
+                            return reader.ReadSByte();
+                        }
+                        finally
+                        {
+                            reader.Dispose();
+                        }
+                    });
 #endif
                 }
             }
@@ -264,7 +403,18 @@ namespace MessagePack.Tests
         [Fact]
         public void ReadSByte_ThrowsOnUnexpectedCode()
         {
-            Assert.Throws<MessagePackSerializationException>(() => new MessagePackReader(StringEncodedAsFixStr).ReadSByte());
+            Assert.Throws<MessagePackSerializationException>(() =>
+            {
+                var reader = new MessagePackReader(StringEncodedAsFixStr);
+                try
+                {
+                    return reader.ReadSByte();
+                }
+                finally
+                {
+                    reader.Dispose();
+                }
+            });
         }
 
         [Fact]
@@ -275,12 +425,31 @@ namespace MessagePack.Tests
                 this.logger.WriteLine("Decoding 0x{0:x} from {1}", value, MessagePackCode.ToFormatName(encoded.First.Span[0]));
                 if (value <= Int16.MaxValue && value >= Int16.MinValue)
                 {
-                    Assert.Equal(value, new MessagePackReader(encoded).ReadInt16());
+                    var reader = new MessagePackReader(encoded);
+                    try
+                    {
+                        Assert.Equal(value, reader.ReadInt16());
+                    }
+                    finally
+                    {
+                        reader.Dispose();
+                    }
                 }
                 else
                 {
 #if !ENABLE_IL2CPP
-                    Assert.Throws<OverflowException>(() => new MessagePackReader(encoded).ReadInt16());
+                    Assert.Throws<OverflowException>(() =>
+                    {
+                        var reader = new MessagePackReader(encoded);
+                        try
+                        {
+                            return reader.ReadInt16();
+                        }
+                        finally
+                        {
+                            reader.Dispose();
+                        }
+                    });
 #endif
                 }
             }
@@ -289,7 +458,18 @@ namespace MessagePack.Tests
         [Fact]
         public void ReadInt16_ThrowsOnUnexpectedCode()
         {
-            Assert.Throws<MessagePackSerializationException>(() => new MessagePackReader(StringEncodedAsFixStr).ReadInt16());
+            Assert.Throws<MessagePackSerializationException>(() =>
+            {
+                var reader = new MessagePackReader(StringEncodedAsFixStr);
+                try
+                {
+                    return reader.ReadInt16();
+                }
+                finally
+                {
+                    reader.Dispose();
+                }
+            });
         }
 
         [Fact]
@@ -300,12 +480,31 @@ namespace MessagePack.Tests
                 this.logger.WriteLine("Decoding 0x{0:x} from {1}", value, MessagePackCode.ToFormatName(encoded.First.Span[0]));
                 if (value <= Int32.MaxValue && value >= Int32.MinValue)
                 {
-                    Assert.Equal(value, new MessagePackReader(encoded).ReadInt32());
+                    var reader = new MessagePackReader(encoded);
+                    try
+                    {
+                        Assert.Equal(value, reader.ReadInt32());
+                    }
+                    finally
+                    {
+                        reader.Dispose();
+                    }
                 }
                 else
                 {
 #if !ENABLE_IL2CPP
-                    Assert.Throws<OverflowException>(() => new MessagePackReader(encoded).ReadInt32());
+                    Assert.Throws<OverflowException>(() =>
+                    {
+                        var reader = new MessagePackReader(encoded);
+                        try
+                        {
+                            return reader.ReadInt32();
+                        }
+                        finally
+                        {
+                            reader.Dispose();
+                        }
+                    });
 #endif
                 }
             }
@@ -314,7 +513,18 @@ namespace MessagePack.Tests
         [Fact]
         public void ReadInt32_ThrowsOnUnexpectedCode()
         {
-            Assert.Throws<MessagePackSerializationException>(() => new MessagePackReader(StringEncodedAsFixStr).ReadInt32());
+            Assert.Throws<MessagePackSerializationException>(() =>
+            {
+                var reader = new MessagePackReader(StringEncodedAsFixStr);
+                try
+                {
+                    return reader.ReadInt32();
+                }
+                finally
+                {
+                    reader.Dispose();
+                }
+            });
         }
 
         [Fact]
@@ -325,12 +535,31 @@ namespace MessagePack.Tests
                 this.logger.WriteLine("Decoding 0x{0:x} from {1}", value, MessagePackCode.ToFormatName(encoded.First.Span[0]));
                 if (value <= Int64.MaxValue && value >= Int64.MinValue)
                 {
-                    Assert.Equal(value, new MessagePackReader(encoded).ReadInt64());
+                    var reader = new MessagePackReader(encoded);
+                    try
+                    {
+                        Assert.Equal(value, reader.ReadInt64());
+                    }
+                    finally
+                    {
+                        reader.Dispose();
+                    }
                 }
                 else
                 {
 #if !ENABLE_IL2CPP
-                    Assert.Throws<OverflowException>(() => new MessagePackReader(encoded).ReadInt64());
+                    Assert.Throws<OverflowException>(() =>
+                    {
+                        var reader = new MessagePackReader(encoded);
+                        try
+                        {
+                            return reader.ReadInt64();
+                        }
+                        finally
+                        {
+                            reader.Dispose();
+                        }
+                    });
 #endif
                 }
             }
@@ -339,7 +568,18 @@ namespace MessagePack.Tests
         [Fact]
         public void ReadInt64_ThrowsOnUnexpectedCode()
         {
-            Assert.Throws<MessagePackSerializationException>(() => new MessagePackReader(StringEncodedAsFixStr).ReadInt64());
+            Assert.Throws<MessagePackSerializationException>(() =>
+            {
+                var reader = new MessagePackReader(StringEncodedAsFixStr);
+                try
+                {
+                    return reader.ReadInt64();
+                }
+                finally
+                {
+                    reader.Dispose();
+                }
+            });
         }
     }
 }

@@ -185,9 +185,16 @@ namespace MessagePack.Formatters
             using (var scratchRental = SequencePool.Shared.Rent())
             {
                 MessagePackWriter scratchWriter = writer.Clone(scratchRental.Value);
-                scratchWriter.WriteString(typeName);
-                serializeMethod(formatter, ref scratchWriter, value, options);
-                scratchWriter.Flush();
+                try
+                {
+                    scratchWriter.WriteString(typeName);
+                    serializeMethod(formatter, ref scratchWriter, value, options);
+                    scratchWriter.Flush();
+                }
+                finally
+                {
+                    scratchWriter.Dispose();
+                }
 
                 // mark as extension with code 100
                 writer.WriteExtensionFormat(new ExtensionResult((sbyte)ThisLibraryExtensionTypeCodes.TypelessFormatter, scratchRental.Value));
@@ -204,30 +211,41 @@ namespace MessagePack.Formatters
             if (reader.NextMessagePackType == MessagePackType.Extension)
             {
                 MessagePackReader peekReader = reader.CreatePeekReader();
-                ExtensionHeader ext = peekReader.ReadExtensionFormatHeader();
-                if (ext.TypeCode == ThisLibraryExtensionTypeCodes.TypelessFormatter)
+                try
                 {
-                    reader = peekReader; // commit the experimental read made earlier.
-
-                    // it has type name serialized
-                    ReadOnlySequence<byte> typeName = reader.ReadStringSequence().Value;
-                    ArraySegment<byte> typeNameArraySegment;
-                    byte[] rented = null;
-                    if (!typeName.IsSingleSegment || !MemoryMarshal.TryGetArray(typeName.First, out typeNameArraySegment))
+                    ExtensionHeader ext = peekReader.ReadExtensionFormatHeader();
+                    if (ext.TypeCode == ThisLibraryExtensionTypeCodes.TypelessFormatter)
                     {
-                        rented = ArrayPool<byte>.Shared.Rent((int)typeName.Length);
-                        typeName.CopyTo(rented);
-                        typeNameArraySegment = new ArraySegment<byte>(rented, 0, (int)typeName.Length);
+                        {
+                            var temp = reader;
+                            reader = peekReader; // commit the experimental read made earlier.
+                            peekReader = temp;
+                        }
+
+                        // it has type name serialized
+                        ReadOnlySequence<byte> typeName = reader.ReadStringSequence().Value;
+                        ArraySegment<byte> typeNameArraySegment;
+                        byte[] rented = null;
+                        if (!typeName.IsSingleSegment || !MemoryMarshal.TryGetArray(typeName.First, out typeNameArraySegment))
+                        {
+                            rented = ArrayPool<byte>.Shared.Rent((int)typeName.Length);
+                            typeName.CopyTo(rented);
+                            typeNameArraySegment = new ArraySegment<byte>(rented, 0, (int)typeName.Length);
+                        }
+
+                        var result = this.DeserializeByTypeName(typeNameArraySegment, ref reader, options);
+
+                        if (rented != null)
+                        {
+                            ArrayPool<byte>.Shared.Return(rented);
+                        }
+
+                        return result;
                     }
-
-                    var result = this.DeserializeByTypeName(typeNameArraySegment, ref reader, options);
-
-                    if (rented != null)
-                    {
-                        ArrayPool<byte>.Shared.Return(rented);
-                    }
-
-                    return result;
+                }
+                finally
+                {
+                    peekReader.Dispose();
                 }
             }
 

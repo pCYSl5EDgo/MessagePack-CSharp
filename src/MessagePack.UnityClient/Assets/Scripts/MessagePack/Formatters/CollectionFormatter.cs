@@ -349,19 +349,27 @@ namespace MessagePack.Formatters
                         using (var scratchRental = SequencePool.Shared.Rent())
                         {
                             var scratch = scratchRental.Value;
-                            MessagePackWriter scratchWriter = writer.Clone(scratch);
                             var count = 0;
-                            using (var e = this.GetSourceEnumerator(value))
+                            MessagePackWriter scratchWriter = writer.Clone(scratch);
+                            try
                             {
-                                while (e.MoveNext())
+                                using (var e = this.GetSourceEnumerator(value))
                                 {
-                                    writer.CancellationToken.ThrowIfCancellationRequested();
-                                    count++;
-                                    formatter.Serialize(ref scratchWriter, e.Current, options);
+                                    while (e.MoveNext())
+                                    {
+                                        writer.CancellationToken.ThrowIfCancellationRequested();
+                                        count++;
+                                        formatter.Serialize(ref scratchWriter, e.Current, options);
+                                    }
                                 }
+
+                                scratchWriter.Flush();
+                            }
+                            finally
+                            {
+                                scratchWriter.Dispose();
                             }
 
-                            scratchWriter.Flush();
                             writer.WriteArrayHeader(count);
                             writer.WriteRaw(scratch.AsReadOnlySequence);
                         }
@@ -967,6 +975,7 @@ namespace MessagePack.Formatters
                 }
                 finally
                 {
+                    scratchWriter.Dispose();
                     if (e is IDisposable d)
                     {
                         d.Dispose();

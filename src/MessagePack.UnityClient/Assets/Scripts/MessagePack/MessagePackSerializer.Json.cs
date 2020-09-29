@@ -27,13 +27,30 @@ namespace MessagePack
                 {
                     CancellationToken = cancellationToken,
                 };
-                Serialize(ref msgpackWriter, obj, options);
-                msgpackWriter.Flush();
+
+                try
+                {
+                    Serialize(ref msgpackWriter, obj, options);
+                    msgpackWriter.Flush();
+                }
+                finally
+                {
+                    msgpackWriter.Dispose();
+                }
+
                 var msgpackReader = new MessagePackReader(sequenceRental.Value)
                 {
                     CancellationToken = cancellationToken,
                 };
-                ConvertToJson(ref msgpackReader, textWriter, options);
+
+                try
+                {
+                    ConvertToJson(ref msgpackReader, textWriter, options);
+                }
+                finally
+                {
+                    msgpackReader.Dispose();
+                }
             }
         }
 
@@ -65,7 +82,16 @@ namespace MessagePack
             {
                 CancellationToken = cancellationToken,
             };
-            ConvertToJson(ref reader, jsonWriter, options);
+
+            try
+            {
+                ConvertToJson(ref reader, jsonWriter, options);
+            }
+            finally
+            {
+                reader.Dispose();
+            }
+
             return jsonWriter.ToString();
         }
 
@@ -93,12 +119,20 @@ namespace MessagePack
                             {
                                 CancellationToken = reader.CancellationToken,
                             };
-                            if (scratchReader.End)
-                            {
-                                return;
-                            }
 
-                            ToJsonCore(ref scratchReader, jsonWriter, options);
+                            try
+                            {
+                                if (scratchReader.End)
+                                {
+                                    return;
+                                }
+
+                                ToJsonCore(ref scratchReader, jsonWriter, options);
+                            }
+                            finally
+                            {
+                                scratchReader.Dispose();
+                            }
                         }
                         else
                         {
@@ -139,12 +173,21 @@ namespace MessagePack
                 {
                     CancellationToken = cancellationToken,
                 };
-                using (var sr = new StringReader(str))
+
+                try
                 {
-                    ConvertFromJson(sr, ref writer, options);
+                    using (var sr = new StringReader(str))
+                    {
+                        ConvertFromJson(sr, ref writer, options);
+                    }
+
+                    writer.Flush();
+                }
+                finally
+                {
+                    writer.Dispose();
                 }
 
-                writer.Flush();
                 return scratchRental.Value.AsReadOnlySequence.ToArray();
             }
         }
@@ -160,12 +203,20 @@ namespace MessagePack
                 using (var scratchRental = SequencePool.Shared.Rent())
                 {
                     MessagePackWriter scratchWriter = writer.Clone(scratchRental.Value);
-                    using (var jr = new TinyJsonReader(reader, false))
+                    try
                     {
-                        FromJsonCore(jr, ref scratchWriter);
+                        using (var jr = new TinyJsonReader(reader, false))
+                        {
+                            FromJsonCore(jr, ref scratchWriter);
+                        }
+
+                        scratchWriter.Flush();
+                    }
+                    finally
+                    {
+                        scratchWriter.Dispose();
                     }
 
-                    scratchWriter.Flush();
                     ToLZ4BinaryCore(scratchRental.Value, ref writer, options.Compression);
                 }
             }
@@ -191,9 +242,17 @@ namespace MessagePack
                         // Set up a scratch area to serialize the collection since we don't know its length yet, which must be written first.
                         using (var scratchRental = SequencePool.Shared.Rent())
                         {
+                            uint mapCount;
                             MessagePackWriter scratchWriter = writer.Clone(scratchRental.Value);
-                            var mapCount = FromJsonCore(jr, ref scratchWriter);
-                            scratchWriter.Flush();
+                            try
+                            {
+                                mapCount = FromJsonCore(jr, ref scratchWriter);
+                                scratchWriter.Flush();
+                            }
+                            finally
+                            {
+                                scratchWriter.Dispose();
+                            }
 
                             mapCount = mapCount / 2; // remove propertyname string count.
                             writer.WriteMapHeader(mapCount);
@@ -208,9 +267,17 @@ namespace MessagePack
                         // Set up a scratch area to serialize the collection since we don't know its length yet, which must be written first.
                         using (var scratchRental = SequencePool.Shared.Rent())
                         {
+                            uint arrayCount;
                             MessagePackWriter scratchWriter = writer.Clone(scratchRental.Value);
-                            var arrayCount = FromJsonCore(jr, ref scratchWriter);
-                            scratchWriter.Flush();
+                            try
+                            {
+                                arrayCount = FromJsonCore(jr, ref scratchWriter);
+                                scratchWriter.Flush();
+                            }
+                            finally
+                            {
+                                scratchWriter.Dispose();
+                            }
 
                             writer.WriteArrayHeader(arrayCount);
                             writer.WriteRaw(scratchRental.Value);

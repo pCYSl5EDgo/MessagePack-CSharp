@@ -55,8 +55,16 @@ namespace MessagePack
             {
                 CancellationToken = cancellationToken,
             };
-            Serialize(ref fastWriter, value, options);
-            fastWriter.Flush();
+
+            try
+            {
+                Serialize(ref fastWriter, value, options);
+                fastWriter.Flush();
+            }
+            finally
+            {
+                fastWriter.Dispose();
+            }
         }
 
         /// <summary>
@@ -83,8 +91,16 @@ namespace MessagePack
                     {
                         var scratch = scratchRental.Value;
                         MessagePackWriter scratchWriter = writer.Clone(scratch);
-                        options.Resolver.GetFormatterWithVerify<T>().Serialize(ref scratchWriter, value, options);
-                        scratchWriter.Flush();
+                        try
+                        {
+                            options.Resolver.GetFormatterWithVerify<T>().Serialize(ref scratchWriter, value, options);
+                            scratchWriter.Flush();
+                        }
+                        finally
+                        {
+                            scratchWriter.Dispose();
+                        }
+
                         ToLZ4BinaryCore(scratch, ref writer, options.Compression);
                     }
                 }
@@ -123,8 +139,16 @@ namespace MessagePack
             {
                 CancellationToken = cancellationToken,
             };
-            Serialize(ref msgpackWriter, value, options);
-            return msgpackWriter.FlushAndGetArray();
+
+            try
+            {
+                Serialize(ref msgpackWriter, value, options);
+                return msgpackWriter.FlushAndGetArray();
+            }
+            finally
+            {
+                msgpackWriter.Dispose();
+            }
         }
 
         /// <summary>
@@ -203,7 +227,15 @@ namespace MessagePack
             {
                 CancellationToken = cancellationToken,
             };
-            return Deserialize<T>(ref reader, options);
+
+            try
+            {
+                return Deserialize<T>(ref reader, options);
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         /// <summary>
@@ -228,7 +260,14 @@ namespace MessagePack
                         if (TryDecompress(ref reader, msgPackUncompressed))
                         {
                             MessagePackReader uncompressedReader = reader.Clone(msgPackUncompressed.AsReadOnlySequence);
-                            return options.Resolver.GetFormatterWithVerify<T>().Deserialize(ref uncompressedReader, options);
+                            try
+                            {
+                                return options.Resolver.GetFormatterWithVerify<T>().Deserialize(ref uncompressedReader, options);
+                            }
+                            finally
+                            {
+                                uncompressedReader.Dispose();
+                            }
                         }
                         else
                         {
@@ -262,7 +301,15 @@ namespace MessagePack
             {
                 CancellationToken = cancellationToken,
             };
-            return Deserialize<T>(ref reader, options);
+
+            try
+            {
+                return Deserialize<T>(ref reader, options);
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         /// <summary>
@@ -292,8 +339,18 @@ namespace MessagePack
             {
                 CancellationToken = cancellationToken,
             };
-            T result = Deserialize<T>(ref reader, options);
-            bytesRead = buffer.Slice(0, (int)reader.Consumed).Length;
+
+            T result;
+            try
+            {
+                result = Deserialize<T>(ref reader, options);
+                bytesRead = buffer.Slice(0, (int)reader.Consumed).Length;
+            }
+            finally
+            {
+                reader.Dispose();
+            }
+
             return result;
         }
 
@@ -422,13 +479,22 @@ namespace MessagePack
             {
                 CancellationToken = cancellationToken,
             };
-            T result = Deserialize<T>(ref reader, options);
 
-            if (streamToRewind.CanSeek && !reader.End)
+            T result;
+            try
             {
-                // Reverse the stream as many bytes as we left unread.
-                int bytesNotRead = checked((int)reader.Sequence.Slice(reader.Position).Length);
-                streamToRewind.Seek(-bytesNotRead, SeekOrigin.Current);
+                result = Deserialize<T>(ref reader, options);
+
+                if (streamToRewind.CanSeek && !reader.End)
+                {
+                    // Reverse the stream as many bytes as we left unread.
+                    int bytesNotRead = checked((int)reader.Sequence.Slice(reader.Position).Length);
+                    streamToRewind.Seek(-bytesNotRead, SeekOrigin.Current);
+                }
+            }
+            finally
+            {
+                reader.Dispose();
             }
 
             return result;
@@ -477,19 +543,37 @@ namespace MessagePack
                 if (reader.NextMessagePackType == MessagePackType.Extension)
                 {
                     MessagePackReader peekReader = reader.CreatePeekReader();
-                    ExtensionHeader header = peekReader.ReadExtensionFormatHeader();
+                    ExtensionHeader header;
+                    try
+                    {
+                        header = peekReader.ReadExtensionFormatHeader();
+                    }
+                    finally
+                    {
+                        peekReader.Dispose();
+                    }
+
                     if (header.TypeCode == ThisLibraryExtensionTypeCodes.Lz4Block)
                     {
                         // Read the extension using the original reader, so we "consume" it.
                         ExtensionResult extension = reader.ReadExtensionFormat();
                         var extReader = new MessagePackReader(extension.Data);
 
-                        // The first part of the extension payload is a MessagePack-encoded Int32 that
-                        // tells us the length the data will be AFTER decompression.
-                        int uncompressedLength = extReader.ReadInt32();
+                        int uncompressedLength;
+                        ReadOnlySequence<byte> compressedData;
+                        try
+                        {
+                            // The first part of the extension payload is a MessagePack-encoded Int32 that
+                            // tells us the length the data will be AFTER decompression.
+                            uncompressedLength = extReader.ReadInt32();
 
-                        // The rest of the payload is the compressed data itself.
-                        ReadOnlySequence<byte> compressedData = extReader.Sequence.Slice(extReader.Position);
+                            // The rest of the payload is the compressed data itself.
+                            compressedData = extReader.Sequence.Slice(extReader.Position);
+                        }
+                        finally
+                        {
+                            reader.Dispose();
+                        }
 
                         Span<byte> uncompressedSpan = writer.GetSpan(uncompressedLength).Slice(0, uncompressedLength);
                         int actualUncompressedLength = LZ4Operation(compressedData, uncompressedSpan, LZ4CodecDecode);
@@ -503,42 +587,53 @@ namespace MessagePack
                 if (reader.NextMessagePackType == MessagePackType.Array)
                 {
                     MessagePackReader peekReader = reader.CreatePeekReader();
-                    var arrayLength = peekReader.ReadArrayHeader();
-                    if (arrayLength != 0 && peekReader.NextMessagePackType == MessagePackType.Extension)
+                    try
                     {
-                        ExtensionHeader header = peekReader.ReadExtensionFormatHeader();
-                        if (header.TypeCode == ThisLibraryExtensionTypeCodes.Lz4BlockArray)
+                        var arrayLength = peekReader.ReadArrayHeader();
+                        if (arrayLength != 0 && peekReader.NextMessagePackType == MessagePackType.Extension)
                         {
-                            // switch peekReader as original reader.
-                            reader = peekReader;
-
-                            // Read from [Ext(98:int,int...), bin,bin,bin...]
-                            var sequenceCount = arrayLength - 1;
-                            var uncompressedLengths = ArrayPool<int>.Shared.Rent(sequenceCount);
-                            try
+                            ExtensionHeader header = peekReader.ReadExtensionFormatHeader();
+                            if (header.TypeCode == ThisLibraryExtensionTypeCodes.Lz4BlockArray)
                             {
-                                for (int i = 0; i < sequenceCount; i++)
+                                // switch peekReader as original reader.
                                 {
-                                    uncompressedLengths[i] = reader.ReadInt32();
+                                    var temp = reader;
+                                    reader = peekReader;
+                                    peekReader = temp;
                                 }
 
-                                for (int i = 0; i < sequenceCount; i++)
+                                // Read from [Ext(98:int,int...), bin,bin,bin...]
+                                var sequenceCount = arrayLength - 1;
+                                var uncompressedLengths = ArrayPool<int>.Shared.Rent(sequenceCount);
+                                try
                                 {
-                                    var uncompressedLength = uncompressedLengths[i];
-                                    var lz4Block = reader.ReadBytes();
-                                    Span<byte> uncompressedSpan = writer.GetSpan(uncompressedLength).Slice(0, uncompressedLength);
-                                    var actualUncompressedLength = LZ4Operation(lz4Block.Value, uncompressedSpan, LZ4CodecDecode);
-                                    Debug.Assert(actualUncompressedLength == uncompressedLength, "Unexpected length of uncompressed data.");
-                                    writer.Advance(actualUncompressedLength);
-                                }
+                                    for (int i = 0; i < sequenceCount; i++)
+                                    {
+                                        uncompressedLengths[i] = reader.ReadInt32();
+                                    }
 
-                                return true;
-                            }
-                            finally
-                            {
-                                ArrayPool<int>.Shared.Return(uncompressedLengths);
+                                    for (int i = 0; i < sequenceCount; i++)
+                                    {
+                                        var uncompressedLength = uncompressedLengths[i];
+                                        var lz4Block = reader.ReadBytes();
+                                        Span<byte> uncompressedSpan = writer.GetSpan(uncompressedLength).Slice(0, uncompressedLength);
+                                        var actualUncompressedLength = LZ4Operation(lz4Block.Value, uncompressedSpan, LZ4CodecDecode);
+                                        Debug.Assert(actualUncompressedLength == uncompressedLength, "Unexpected length of uncompressed data.");
+                                        writer.Advance(actualUncompressedLength);
+                                    }
+
+                                    return true;
+                                }
+                                finally
+                                {
+                                    ArrayPool<int>.Shared.Return(uncompressedLengths);
+                                }
                             }
                         }
+                    }
+                    finally
+                    {
+                        peekReader.Dispose();
                     }
                 }
             }

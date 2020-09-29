@@ -43,7 +43,15 @@ namespace MessagePack.Tests
             foreach ((System.Numerics.BigInteger value, ReadOnlySequence<byte> encoded) in this.integersOfInterest)
             {
                 this.logger.WriteLine("Decoding 0x{0:x} from {1}", value, MessagePackCode.ToFormatName(encoded.First.Span[0]));
-                Assert.Equal((float)(double)value, new MessagePackReader(encoded).ReadSingle());
+                var reader = new MessagePackReader(encoded);
+                try
+                {
+                    Assert.Equal((float)(double)value, reader.ReadSingle());
+                }
+                finally
+                {
+                    reader.Dispose();
+                }
             }
         }
 
@@ -51,7 +59,14 @@ namespace MessagePack.Tests
         public void ReadSingle_CanReadDouble()
         {
             var reader = new MessagePackReader(Encode((ref MessagePackWriter w) => w.Write(1.23)));
-            Assert.Equal(1.23f, reader.ReadSingle());
+            try
+            {
+                Assert.Equal(1.23f, reader.ReadSingle());
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]
@@ -59,13 +74,27 @@ namespace MessagePack.Tests
         {
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
-            writer.WriteArrayHeader(9999);
-            writer.Flush();
+            try
+            {
+                writer.WriteArrayHeader(9999);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
 
             Assert.Throws<EndOfStreamException>(() =>
             {
                 var reader = new MessagePackReader(sequence);
-                reader.ReadArrayHeader();
+                try
+                {
+                    reader.ReadArrayHeader();
+                }
+                finally
+                {
+                    reader.Dispose();
+                }
             });
         }
 
@@ -75,15 +104,36 @@ namespace MessagePack.Tests
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
             const int expectedCount = 100;
-            writer.WriteArrayHeader(expectedCount);
-            writer.Flush();
+            try
+            {
+                writer.WriteArrayHeader(expectedCount);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
 
             var reader = new MessagePackReader(sequence.AsReadOnlySequence.Slice(0, sequence.Length - 1));
-            Assert.False(reader.TryReadArrayHeader(out _));
+            try
+            {
+                Assert.False(reader.TryReadArrayHeader(out _));
+            }
+            finally
+            {
+                reader.Dispose();
+            }
 
             reader = new MessagePackReader(sequence);
-            Assert.True(reader.TryReadArrayHeader(out int actualCount));
-            Assert.Equal(expectedCount, actualCount);
+            try
+            {
+                Assert.True(reader.TryReadArrayHeader(out int actualCount));
+                Assert.Equal(expectedCount, actualCount);
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]
@@ -91,13 +141,27 @@ namespace MessagePack.Tests
         {
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
-            writer.WriteMapHeader(9999);
-            writer.Flush();
+            try
+            {
+                writer.WriteMapHeader(9999);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
 
             Assert.Throws<EndOfStreamException>(() =>
             {
                 var reader = new MessagePackReader(sequence);
-                reader.ReadMapHeader();
+                try
+                {
+                    reader.ReadMapHeader();
+                }
+                finally
+                {
+                    reader.Dispose();
+                }
             });
         }
 
@@ -107,15 +171,36 @@ namespace MessagePack.Tests
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
             const int expectedCount = 100;
-            writer.WriteMapHeader(expectedCount);
-            writer.Flush();
+            try
+            {
+                writer.WriteMapHeader(expectedCount);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
 
             var reader = new MessagePackReader(sequence.AsReadOnlySequence.Slice(0, sequence.Length - 1));
-            Assert.False(reader.TryReadMapHeader(out _));
+            try
+            {
+                Assert.False(reader.TryReadMapHeader(out _));
+            }
+            finally
+            {
+                reader.Dispose();
+            }
 
             reader = new MessagePackReader(sequence);
-            Assert.True(reader.TryReadMapHeader(out int actualCount));
-            Assert.Equal(expectedCount, actualCount);
+            try
+            {
+                Assert.True(reader.TryReadMapHeader(out int actualCount));
+                Assert.Equal(expectedCount, actualCount);
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]
@@ -123,18 +208,39 @@ namespace MessagePack.Tests
         {
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
-            writer.WriteExtensionFormatHeader(new ExtensionHeader(3, 1));
-            writer.WriteRaw(new byte[1]);
-            writer.Flush();
+            try
+            {
+                writer.WriteExtensionFormatHeader(new ExtensionHeader(3, 1));
+                writer.WriteRaw(new byte[1]);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
 
             Assert.Throws<EndOfStreamException>(() =>
             {
                 var truncatedReader = new MessagePackReader(sequence.AsReadOnlySequence.Slice(0, sequence.Length - 1));
-                truncatedReader.ReadExtensionFormatHeader();
+                try
+                {
+                    truncatedReader.ReadExtensionFormatHeader();
+                }
+                finally
+                {
+                    truncatedReader.Dispose();
+                }
             });
 
             var reader = new MessagePackReader(sequence);
-            reader.ReadExtensionFormatHeader();
+            try
+            {
+                reader.ReadExtensionFormatHeader();
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]
@@ -143,15 +249,36 @@ namespace MessagePack.Tests
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
             var expectedExtensionHeader = new ExtensionHeader(4, 100);
-            writer.WriteExtensionFormatHeader(expectedExtensionHeader);
-            writer.Flush();
+            try
+            {
+                writer.WriteExtensionFormatHeader(expectedExtensionHeader);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
 
             var reader = new MessagePackReader(sequence.AsReadOnlySequence.Slice(0, sequence.Length - 1));
-            Assert.False(reader.TryReadExtensionFormatHeader(out _));
+            try
+            {
+                Assert.False(reader.TryReadExtensionFormatHeader(out _));
+            }
+            finally
+            {
+                reader.Dispose();
+            }
 
             reader = new MessagePackReader(sequence);
-            Assert.True(reader.TryReadExtensionFormatHeader(out ExtensionHeader actualExtensionHeader));
-            Assert.Equal(expectedExtensionHeader, actualExtensionHeader);
+            try
+            {
+                Assert.True(reader.TryReadExtensionFormatHeader(out ExtensionHeader actualExtensionHeader));
+                Assert.Equal(expectedExtensionHeader, actualExtensionHeader);
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]
@@ -160,21 +287,36 @@ namespace MessagePack.Tests
             var contiguousSequence = new Sequence<byte>();
             var writer = new MessagePackWriter(contiguousSequence);
             var expected = new byte[] { 0x1, 0x2, 0x3 };
-            writer.WriteString(expected);
-            writer.Flush();
+            try
+            {
+                writer.WriteString(expected);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
+
             var fragmentedSequence = BuildSequence(
                contiguousSequence.AsReadOnlySequence.First.Slice(0, 2),
                contiguousSequence.AsReadOnlySequence.First.Slice(2));
 
             var reader = new MessagePackReader(fragmentedSequence);
-            Assert.False(reader.TryReadStringSpan(out ReadOnlySpan<byte> span));
-            Assert.Equal(0, span.Length);
+            try
+            {
+                Assert.False(reader.TryReadStringSpan(out ReadOnlySpan<byte> span));
+                Assert.Equal(0, span.Length);
 
-            // After failing to read the span, a caller should still be able to read it as a sequence.
-            var actualSequence = reader.ReadStringSequence();
-            Assert.True(actualSequence.HasValue);
-            Assert.False(actualSequence.Value.IsSingleSegment);
-            Assert.Equal(new byte[] { 1, 2, 3 }, actualSequence.Value.ToArray());
+                // After failing to read the span, a caller should still be able to read it as a sequence.
+                var actualSequence = reader.ReadStringSequence();
+                Assert.True(actualSequence.HasValue);
+                Assert.False(actualSequence.Value.IsSingleSegment);
+                Assert.Equal(new byte[] { 1, 2, 3 }, actualSequence.Value.ToArray());
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]
@@ -183,13 +325,27 @@ namespace MessagePack.Tests
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
             var expected = new byte[] { 0x1, 0x2, 0x3 };
-            writer.WriteString(expected);
-            writer.Flush();
+            try
+            {
+                writer.WriteString(expected);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
 
             var reader = new MessagePackReader(sequence);
-            Assert.True(reader.TryReadStringSpan(out ReadOnlySpan<byte> span));
-            Assert.Equal(expected, span.ToArray());
-            Assert.True(reader.End);
+            try
+            {
+                Assert.True(reader.TryReadStringSpan(out ReadOnlySpan<byte> span));
+                Assert.Equal(expected, span.ToArray());
+                Assert.True(reader.End);
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]
@@ -197,20 +353,43 @@ namespace MessagePack.Tests
         {
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
-            writer.WriteNil();
-            writer.Flush();
+            try
+            {
+                writer.WriteNil();
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
 
             var reader = new MessagePackReader(sequence);
-            Assert.False(reader.TryReadStringSpan(out ReadOnlySpan<byte> span));
-            Assert.Equal(0, span.Length);
-            Assert.Equal(sequence.AsReadOnlySequence.Start, reader.Position);
+            try
+            {
+                Assert.False(reader.TryReadStringSpan(out ReadOnlySpan<byte> span));
+                Assert.Equal(0, span.Length);
+                Assert.Equal(sequence.AsReadOnlySequence.Start, reader.Position);
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]
         public void ReadString_MultibyteChars()
         {
             var reader = new MessagePackReader(TestConstants.MsgPackEncodedMultibyteCharString);
-            string actual = reader.ReadString();
+            string actual;
+            try
+            {
+                actual = reader.ReadString();
+            }
+            finally
+            {
+                reader.Dispose();
+            }
+
             Assert.Equal(TestConstants.MultibyteCharString, actual);
         }
 
@@ -218,11 +397,18 @@ namespace MessagePack.Tests
         public void CancellationToken()
         {
             var reader = new MessagePackReader(default);
-            Assert.False(reader.CancellationToken.CanBeCanceled);
+            try
+            {
+                Assert.False(reader.CancellationToken.CanBeCanceled);
 
-            var cts = new CancellationTokenSource();
-            reader.CancellationToken = cts.Token;
-            Assert.Equal(cts.Token, reader.CancellationToken);
+                var cts = new CancellationTokenSource();
+                reader.CancellationToken = cts.Token;
+                Assert.Equal(cts.Token, reader.CancellationToken);
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]
@@ -230,37 +416,57 @@ namespace MessagePack.Tests
         {
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
-            writer.Write(3);
-            writer.WriteArrayHeader(2);
-            writer.Write(1);
-            writer.Write("Hi");
-            writer.Write(5);
-            writer.Flush();
+            try
+            {
+                writer.Write(3);
+                writer.WriteArrayHeader(2);
+                writer.Write(1);
+                writer.Write("Hi");
+                writer.Write(5);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
 
             var reader = new MessagePackReader(sequence.AsReadOnlySequence);
+            try
+            {
+                var first = reader.ReadRaw();
+                Assert.Equal(1, first.Length);
+                Assert.Equal(3, new MessagePackReader(first).ReadInt32());
 
-            var first = reader.ReadRaw();
-            Assert.Equal(1, first.Length);
-            Assert.Equal(3, new MessagePackReader(first).ReadInt32());
+                var second = reader.ReadRaw();
+                Assert.Equal(5, second.Length);
 
-            var second = reader.ReadRaw();
-            Assert.Equal(5, second.Length);
+                var third = reader.ReadRaw();
+                Assert.Equal(1, third.Length);
 
-            var third = reader.ReadRaw();
-            Assert.Equal(1, third.Length);
-
-            Assert.True(reader.End);
+                Assert.True(reader.End);
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]
         public void Depth()
         {
             var reader = new MessagePackReader(Encode((ref MessagePackWriter w) => w.Write(1.23)));
-            Assert.Equal(0, reader.Depth);
-            reader.Depth++;
-            Assert.Equal(1, reader.Depth);
-            reader.Depth--;
-            Assert.Equal(0, reader.Depth);
+            try
+            {
+                Assert.Equal(0, reader.Depth);
+                reader.Depth++;
+                Assert.Equal(1, reader.Depth);
+                reader.Depth--;
+                Assert.Equal(0, reader.Depth);
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]
@@ -327,19 +533,34 @@ namespace MessagePack.Tests
         {
             var cts = new CancellationTokenSource();
             var reader = new MessagePackReader(StringEncodedAsFixStr) { CancellationToken = cts.Token };
-            reader.ReadRaw(1); // advance to test that the peek reader starts from a non-initial position.
-            var peek = reader.CreatePeekReader();
+            try
+            {
+                reader.ReadRaw(1); // advance to test that the peek reader starts from a non-initial position.
+                var peek = reader.CreatePeekReader();
+                try
+                {
+                    // Verify equivalence
+                    Assert.Equal(reader.CancellationToken, peek.CancellationToken);
+                    Assert.Equal(reader.Position, peek.Position);
+                    Assert.Equal(reader.Sequence, peek.Sequence);
+                    Assert.NotEqual(reader.Cache, peek.Cache);
+                    Assert.Equal(reader.Cache.Span.Length, peek.Cache.Span.Length);
 
-            // Verify equivalence
-            Assert.Equal(reader.CancellationToken, peek.CancellationToken);
-            Assert.Equal(reader.Position, peek.Position);
-            Assert.Equal(reader.Sequence, peek.Sequence);
-
-            // Verify that advancing the peek reader does not advance the original.
-            var originalPosition = reader.Position;
-            peek.ReadRaw(1);
-            Assert.NotEqual(originalPosition, peek.Position);
-            Assert.Equal(originalPosition, reader.Position);
+                    // Verify that advancing the peek reader does not advance the original.
+                    var originalPosition = reader.Position;
+                    peek.ReadRaw(1);
+                    Assert.NotEqual(originalPosition, peek.Position);
+                    Assert.Equal(originalPosition, reader.Position);
+                }
+                finally
+                {
+                    peek.Dispose();
+                }
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         private delegate void ReaderOperation(ref MessagePackReader reader);
@@ -353,7 +574,14 @@ namespace MessagePack.Tests
             Assert.Throws<EndOfStreamException>(() =>
             {
                 var reader = new MessagePackReader(sequence);
-                readOperation(ref reader);
+                try
+                {
+                    readOperation(ref reader);
+                }
+                finally
+                {
+                    reader.Dispose();
+                }
             });
         }
 
@@ -368,15 +596,30 @@ namespace MessagePack.Tests
         private static T Decode<T>(ReadOnlySequence<byte> sequence, ReadOperation<T> readOperation)
         {
             var reader = new MessagePackReader(sequence);
-            return readOperation(ref reader);
+            try
+            {
+                return readOperation(ref reader);
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         private static ReadOnlySequence<byte> Encode(WriterEncoder cb)
         {
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
-            cb(ref writer);
-            writer.Flush();
+            try
+            {
+                cb(ref writer);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
+
             return sequence.AsReadOnlySequence;
         }
 

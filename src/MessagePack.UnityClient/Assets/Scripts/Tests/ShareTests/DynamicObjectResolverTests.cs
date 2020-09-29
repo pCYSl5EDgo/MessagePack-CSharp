@@ -48,10 +48,18 @@ namespace MessagePack.Tests
         private static void Assert3MemberClassSerializedContent(ReadOnlyMemory<byte> msgpack)
         {
             var reader = new MessagePackReader(msgpack);
-            Assert.Equal(3, reader.ReadArrayHeader());
-            Assert.Equal(1, reader.ReadInt32());
-            Assert.Equal(2, reader.ReadInt32());
-            Assert.Equal(3, reader.ReadInt32());
+
+            try
+            {
+                Assert.Equal(3, reader.ReadArrayHeader());
+                Assert.Equal(1, reader.ReadInt32());
+                Assert.Equal(2, reader.ReadInt32());
+                Assert.Equal(3, reader.ReadInt32());
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         private void PrivateMembersInBaseClass_Helper(MessagePackSerializerOptions options)

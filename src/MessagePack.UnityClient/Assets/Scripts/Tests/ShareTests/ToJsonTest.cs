@@ -20,8 +20,16 @@ namespace MessagePack.Tests
         {
             var sequence = new Sequence<byte>();
             var sequenceWriter = new MessagePackWriter(sequence);
-            MessagePackSerializer.ConvertFromJson(json, ref sequenceWriter, options);
-            sequenceWriter.Flush();
+            try
+            {
+                MessagePackSerializer.ConvertFromJson(json, ref sequenceWriter, options);
+                sequenceWriter.Flush();
+            }
+            finally
+            {
+                sequenceWriter.Dispose();
+            }
+
             return MessagePackSerializer.ConvertToJson(sequence.AsReadOnlySequence, options);
         }
 
@@ -72,8 +80,15 @@ namespace MessagePack.Tests
         {
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
-            writer.WriteInt32(1);
-            writer.Flush();
+            try
+            {
+                writer.WriteInt32(1);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
 
             var truncatedSequence = sequence.AsReadOnlySequence.Slice(0, sequence.Length - 1);
             var ex = Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.ConvertToJson(truncatedSequence));
@@ -85,8 +100,15 @@ namespace MessagePack.Tests
         {
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
-            writer.WriteExtensionFormat(new ExtensionResult(47, new byte[] { 1, 10, 100 }));
-            writer.Flush();
+            try
+            {
+                writer.WriteExtensionFormat(new ExtensionResult(47, new byte[] { 1, 10, 100 }));
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
 
             var msgpack = sequence.AsReadOnlySequence;
             var str = MessagePackSerializer.ConvertToJson(msgpack);

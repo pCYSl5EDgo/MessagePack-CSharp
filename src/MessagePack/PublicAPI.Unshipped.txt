@@ -67,6 +67,18 @@ MessagePack.ImmutableCollection.InterfaceImmutableSetFormatter<T>
 MessagePack.ImmutableCollection.InterfaceImmutableSetFormatter<T>.InterfaceImmutableSetFormatter() -> void
 MessagePack.ImmutableCollection.InterfaceImmutableStackFormatter<T>
 MessagePack.ImmutableCollection.InterfaceImmutableStackFormatter<T>.InterfaceImmutableStackFormatter() -> void
+MessagePack.MessagePackReader.Cache.get -> MessagePack.MessagePackReferenceCache
+MessagePack.MessagePackReader.Dispose() -> void
+MessagePack.MessagePackReferenceCache
+MessagePack.MessagePackReferenceCache.Add(object reference) -> void
+MessagePack.MessagePackReferenceCache.Capacity.get -> int
+MessagePack.MessagePackReferenceCache.Capacity.set -> void
+MessagePack.MessagePackReferenceCache.Clone() -> MessagePack.MessagePackReferenceCache
+MessagePack.MessagePackReferenceCache.Dispose() -> void
+MessagePack.MessagePackReferenceCache.FindIndex(object reference) -> int
+MessagePack.MessagePackReferenceCache.Span.get -> System.Span<object>
+MessagePack.MessagePackWriter.Cache.get -> MessagePack.MessagePackReferenceCache
+MessagePack.MessagePackWriter.Dispose() -> void
 MessagePack.Resolvers.ExpandoObjectResolver
 override MessagePack.ImmutableCollection.ImmutableDictionaryFormatter<TKey, TValue>.Add(System.Collections.Immutable.ImmutableDictionary<TKey, TValue>.Builder collection, int index, TKey key, TValue value, MessagePack.MessagePackSerializerOptions options) -> void
 override MessagePack.ImmutableCollection.ImmutableDictionaryFormatter<TKey, TValue>.Complete(System.Collections.Immutable.ImmutableDictionary<TKey, TValue>.Builder intermediateCollection) -> System.Collections.Immutable.ImmutableDictionary<TKey, TValue>
@@ -109,6 +121,8 @@ override MessagePack.ImmutableCollection.InterfaceImmutableSetFormatter<T>.Creat
 override MessagePack.ImmutableCollection.InterfaceImmutableStackFormatter<T>.Add(T[] collection, int index, T value, MessagePack.MessagePackSerializerOptions options) -> void
 override MessagePack.ImmutableCollection.InterfaceImmutableStackFormatter<T>.Complete(T[] intermediateCollection) -> System.Collections.Immutable.IImmutableStack<T>
 override MessagePack.ImmutableCollection.InterfaceImmutableStackFormatter<T>.Create(int count, MessagePack.MessagePackSerializerOptions options) -> T[]
+static MessagePack.MessagePackReferenceCache.Rent(uint minimumLength = 256) -> MessagePack.MessagePackReferenceCache
+static MessagePack.MessagePackReferenceCache.Return(MessagePack.MessagePackReferenceCache cache) -> void
 static readonly MessagePack.Formatters.ByteMemoryFormatter.Instance -> MessagePack.Formatters.ByteMemoryFormatter
 static readonly MessagePack.Formatters.ByteReadOnlyMemoryFormatter.Instance -> MessagePack.Formatters.ByteReadOnlyMemoryFormatter
 static readonly MessagePack.Formatters.ByteReadOnlySequenceFormatter.Instance -> MessagePack.Formatters.ByteReadOnlySequenceFormatter

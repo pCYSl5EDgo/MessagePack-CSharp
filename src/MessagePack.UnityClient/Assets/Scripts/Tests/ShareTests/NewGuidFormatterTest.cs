@@ -47,13 +47,28 @@ namespace MessagePack.Tests
                 var original = Guid.NewGuid();
                 var sequence = new Sequence<byte>();
                 var sequenceWriter = new MessagePackWriter(sequence);
-                GuidFormatter.Instance.Serialize(ref sequenceWriter, original, null);
-                sequenceWriter.Flush();
+                try
+                {
+                    GuidFormatter.Instance.Serialize(ref sequenceWriter, original, null);
+                    sequenceWriter.Flush();
+                }
+                finally
+                {
+                    sequenceWriter.Dispose();
+                }
+
                 sequence.Length.Is(38);
 
                 var sequenceReader = new MessagePackReader(sequence.AsReadOnlySequence);
-                GuidFormatter.Instance.Deserialize(ref sequenceReader, null).Is(original);
-                sequenceReader.End.IsTrue();
+                try
+                {
+                    GuidFormatter.Instance.Deserialize(ref sequenceReader, null).Is(original);
+                    sequenceReader.End.IsTrue();
+                }
+                finally
+                {
+                    sequenceReader.Dispose();
+                }
             }
 
             {

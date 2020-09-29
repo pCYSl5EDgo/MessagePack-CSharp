@@ -41,17 +41,24 @@ namespace MessagePack.Tests
         {
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
-
-            Span<byte> bytes = stackalloc byte[8];
-            bytes[0] = 1;
-            bytes[7] = 2;
-            fixed (byte* pBytes = bytes)
+            try
             {
-                var flexSpan = new Span<byte>(pBytes, bytes.Length);
-                writer.WriteRaw(flexSpan);
+                Span<byte> bytes = stackalloc byte[8];
+                bytes[0] = 1;
+                bytes[7] = 2;
+                fixed (byte* pBytes = bytes)
+                {
+                    var flexSpan = new Span<byte>(pBytes, bytes.Length);
+                    writer.WriteRaw(flexSpan);
+                }
+
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
             }
 
-            writer.Flush();
             var written = sequence.AsReadOnlySequence.ToArray();
             Assert.Equal(1, written[0]);
             Assert.Equal(2, written[7]);
@@ -62,22 +69,52 @@ namespace MessagePack.Tests
         {
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
-            writer.Write((byte[])null);
-            writer.Flush();
+            try
+            {
+                writer.Write((byte[])null);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
+
             var reader = new MessagePackReader(sequence.AsReadOnlySequence);
-            Assert.True(reader.TryReadNil());
+            try
+            {
+                Assert.True(reader.TryReadNil());
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]
         public void Write_ByteArray()
         {
             var sequence = new Sequence<byte>();
-            var writer = new MessagePackWriter(sequence);
             var buffer = new byte[] { 1, 2, 3 };
-            writer.Write(buffer);
-            writer.Flush();
+            var writer = new MessagePackWriter(sequence);
+            try
+            {
+                writer.Write(buffer);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
+
             var reader = new MessagePackReader(sequence.AsReadOnlySequence);
-            Assert.Equal(buffer, reader.ReadBytes().Value.ToArray());
+            try
+            {
+                Assert.Equal(buffer, reader.ReadBytes().Value.ToArray());
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]
@@ -85,22 +122,52 @@ namespace MessagePack.Tests
         {
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
-            writer.Write((string)null);
-            writer.Flush();
+            try
+            {
+                writer.Write((string)null);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
+
             var reader = new MessagePackReader(sequence.AsReadOnlySequence);
-            Assert.True(reader.TryReadNil());
+            try
+            {
+                Assert.True(reader.TryReadNil());
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]
         public void Write_String()
         {
             var sequence = new Sequence<byte>();
+            const string expected = "hello";
             var writer = new MessagePackWriter(sequence);
-            string expected = "hello";
-            writer.Write(expected);
-            writer.Flush();
+            try
+            {
+                writer.Write(expected);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
+
             var reader = new MessagePackReader(sequence.AsReadOnlySequence);
-            Assert.Equal(expected, reader.ReadString());
+            try
+            {
+                Assert.Equal(expected, reader.ReadString());
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]
@@ -108,8 +175,15 @@ namespace MessagePack.Tests
         {
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
-            writer.Write(TestConstants.MultibyteCharString);
-            writer.Flush();
+            try
+            {
+                writer.Write(TestConstants.MultibyteCharString);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
 
             this.logger.WriteLine("Written bytes: [{0}]", string.Join(", ", sequence.AsReadOnlySequence.ToArray().Select(b => string.Format(CultureInfo.InvariantCulture, "0x{0:x2}", b))));
             Assert.Equal(TestConstants.MsgPackEncodedMultibyteCharString.ToArray(), sequence.AsReadOnlySequence.ToArray());
@@ -119,14 +193,28 @@ namespace MessagePack.Tests
         public void WriteStringHeader()
         {
             var sequence = new Sequence<byte>();
-            var writer = new MessagePackWriter(sequence);
             byte[] strBytes = Encoding.UTF8.GetBytes("hello");
-            writer.WriteStringHeader(strBytes.Length);
-            writer.WriteRaw(strBytes);
-            writer.Flush();
+            var writer = new MessagePackWriter(sequence);
+            try
+            {
+                writer.WriteStringHeader(strBytes.Length);
+                writer.WriteRaw(strBytes);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
 
             var reader = new MessagePackReader(sequence);
-            Assert.Equal("hello", reader.ReadString());
+            try
+            {
+                Assert.Equal("hello", reader.ReadString());
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]
@@ -134,31 +222,58 @@ namespace MessagePack.Tests
         {
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
-            writer.WriteBinHeader(5);
-            writer.WriteRaw(new byte[] { 1, 2, 3, 4, 5 });
-            writer.Flush();
+            try
+            {
+                writer.WriteBinHeader(5);
+                writer.WriteRaw(new byte[] { 1, 2, 3, 4, 5 });
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
 
             var reader = new MessagePackReader(sequence);
-            Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, reader.ReadBytes().Value.ToArray());
+            try
+            {
+                Assert.Equal(new byte[] { 1, 2, 3, 4, 5 }, reader.ReadBytes().Value.ToArray());
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]
         public void WriteExtensionFormatHeader_NegativeExtension()
         {
             var sequence = new Sequence<byte>();
-            var writer = new MessagePackWriter(sequence);
-
             var header = new ExtensionHeader(-1, 10);
-            writer.WriteExtensionFormatHeader(header);
-            writer.WriteRaw(new byte[10]);
-            writer.Flush();
+            var writer = new MessagePackWriter(sequence);
+            try
+            {
+                writer.WriteExtensionFormatHeader(header);
+                writer.WriteRaw(new byte[10]);
+                writer.Flush();
+            }
+            finally
+            {
+                writer.Dispose();
+            }
 
             var written = sequence.AsReadOnlySequence;
             var reader = new MessagePackReader(written);
-            var readHeader = reader.ReadExtensionFormatHeader();
+            try
+            {
+                var readHeader = reader.ReadExtensionFormatHeader();
 
-            Assert.Equal(header.TypeCode, readHeader.TypeCode);
-            Assert.Equal(header.Length, readHeader.Length);
+                Assert.Equal(header.TypeCode, readHeader.TypeCode);
+                Assert.Equal(header.Length, readHeader.Length);
+            }
+            finally
+            {
+                reader.Dispose();
+            }
         }
 
         [Fact]
@@ -166,11 +281,18 @@ namespace MessagePack.Tests
         {
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
-            Assert.False(writer.CancellationToken.CanBeCanceled);
+            try
+            {
+                Assert.False(writer.CancellationToken.CanBeCanceled);
 
-            var cts = new CancellationTokenSource();
-            writer.CancellationToken = cts.Token;
-            Assert.Equal(cts.Token, writer.CancellationToken);
+                var cts = new CancellationTokenSource();
+                writer.CancellationToken = cts.Token;
+                Assert.Equal(cts.Token, writer.CancellationToken);
+            }
+            finally
+            {
+                writer.Dispose();
+            }
         }
 
         [Fact]
@@ -179,7 +301,14 @@ namespace MessagePack.Tests
             Assert.Throws<InvalidOperationException>(() =>
             {
                 var writer = new MessagePackWriter(new BuggyBufferWriter());
-                writer.WriteRaw(new byte[10]);
+                try
+                {
+                    writer.WriteRaw(new byte[10]);
+                }
+                finally
+                {
+                    writer.Dispose();
+                }
             });
         }
 

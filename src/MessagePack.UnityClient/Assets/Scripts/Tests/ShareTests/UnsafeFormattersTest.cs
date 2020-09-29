@@ -20,13 +20,29 @@ namespace MessagePack.Tests
             var guid = Guid.NewGuid();
             var sequence = new Sequence<byte>();
             var sequenceWriter = new MessagePackWriter(sequence);
-            NativeGuidFormatter.Instance.Serialize(ref sequenceWriter, guid, null);
-            sequenceWriter.Flush();
+            try
+            {
+                NativeGuidFormatter.Instance.Serialize(ref sequenceWriter, guid, null);
+                sequenceWriter.Flush();
+            }
+            finally
+            {
+                sequenceWriter.Dispose();
+            }
+
             sequence.Length.Is(18);
 
+            Guid nguid;
             var sequenceReader = new MessagePackReader(sequence.AsReadOnlySequence);
-            Guid nguid = NativeGuidFormatter.Instance.Deserialize(ref sequenceReader, null);
-            Assert.True(sequenceReader.End);
+            try
+            {
+                nguid = NativeGuidFormatter.Instance.Deserialize(ref sequenceReader, null);
+                Assert.True(sequenceReader.End);
+            }
+            finally
+            {
+                sequenceReader.Dispose();
+            }
 
             guid.Is(nguid);
         }
@@ -37,13 +53,29 @@ namespace MessagePack.Tests
             var d = new Decimal(1341, 53156, 61, true, 3);
             var sequence = new Sequence<byte>();
             var sequenceWriter = new MessagePackWriter(sequence);
-            NativeDecimalFormatter.Instance.Serialize(ref sequenceWriter, d, null);
-            sequenceWriter.Flush();
+            try
+            {
+                NativeDecimalFormatter.Instance.Serialize(ref sequenceWriter, d, null);
+                sequenceWriter.Flush();
+            }
+            finally
+            {
+                sequenceWriter.Dispose();
+            }
+
             sequence.Length.Is(18);
 
+            decimal nd;
             var sequenceReader = new MessagePackReader(sequence.AsReadOnlySequence);
-            var nd = NativeDecimalFormatter.Instance.Deserialize(ref sequenceReader, null);
-            Assert.True(sequenceReader.End);
+            try
+            {
+                nd = NativeDecimalFormatter.Instance.Deserialize(ref sequenceReader, null);
+                Assert.True(sequenceReader.End);
+            }
+            finally
+            {
+                sequenceReader.Dispose();
+            }
 
             d.Is(nd);
         }

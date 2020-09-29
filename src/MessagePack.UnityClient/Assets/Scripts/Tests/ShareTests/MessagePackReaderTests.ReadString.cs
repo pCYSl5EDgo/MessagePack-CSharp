@@ -18,8 +18,17 @@ namespace MessagePack.Tests
                 (byte)'A', (byte)'B',
             });
 
+            string result;
             var reader = new MessagePackReader(seq);
-            var result = reader.ReadString();
+            try
+            {
+                result = reader.ReadString();
+            }
+            finally
+            {
+                reader.Dispose();
+            }
+
             Assert.Equal("AB", result);
         }
 
@@ -30,8 +39,17 @@ namespace MessagePack.Tests
                 new[] { (byte)(MessagePackCode.MinFixStr + 2), (byte)'A' },
                 new[] { (byte)'B' });
 
+            string result;
             var reader = new MessagePackReader(seq);
-            var result = reader.ReadString();
+            try
+            {
+                result = reader.ReadString();
+            }
+            finally
+            {
+                reader.Dispose();
+            }
+
             Assert.Equal("AB", result);
         }
 

@@ -26,8 +26,16 @@ namespace MessagePack.Tests
             var sourceBytes = Enumerable.Range(0, arrayLength).Select(i => unchecked((byte)i)).ToArray(); // long byte array
             var messagePackBytes = new Sequence<byte>();
             var messagePackBytesWriter = new MessagePackWriter(messagePackBytes) { OldSpec = true };
-            MessagePackSerializer.Serialize(ref messagePackBytesWriter, sourceBytes);
-            messagePackBytesWriter.Flush();
+            try
+            {
+                MessagePackSerializer.Serialize(ref messagePackBytesWriter, sourceBytes);
+                messagePackBytesWriter.Flush();
+            }
+            finally
+            {
+                messagePackBytesWriter.Dispose();
+            }
+
             Assert.NotEqual(0, messagePackBytes.Length);
 
             var deserializedBytes = DeserializeByClassicMsgPack<byte[]>(messagePackBytes.AsReadOnlySequence.ToArray(), MsgPack.Serialization.SerializationMethod.Array);
@@ -40,8 +48,16 @@ namespace MessagePack.Tests
             byte[] sourceBytes = null;
             var messagePackBytes = new Sequence<byte>();
             var messagePackBytesWriter = new MessagePackWriter(messagePackBytes) { OldSpec = true };
-            MessagePackSerializer.Serialize(ref messagePackBytesWriter, sourceBytes);
-            messagePackBytesWriter.Flush();
+            try
+            {
+                MessagePackSerializer.Serialize(ref messagePackBytesWriter, sourceBytes);
+                messagePackBytesWriter.Flush();
+            }
+            finally
+            {
+                messagePackBytesWriter.Dispose();
+            }
+
             Assert.Equal(1, messagePackBytes.Length);
             Assert.Equal(MessagePackCode.Nil, messagePackBytes.AsReadOnlySequence.First.Span[0]);
 
@@ -80,8 +96,18 @@ namespace MessagePack.Tests
         {
             var sourceBytes = Enumerable.Range(0, arrayLength).Select(i => unchecked((byte)i)).ToArray(); // long byte array
             var messagePackBytes = SerializeByClassicMsgPack(sourceBytes, MsgPack.Serialization.SerializationMethod.Array);
+
+            byte[] deserializedBytes;
             var messagePackBytesReader = new MessagePackReader(messagePackBytes);
-            var deserializedBytes = MessagePackSerializer.Deserialize<byte[]>(ref messagePackBytesReader);
+            try
+            {
+                deserializedBytes = MessagePackSerializer.Deserialize<byte[]>(ref messagePackBytesReader);
+            }
+            finally
+            {
+                messagePackBytesReader.Dispose();
+            }
+
             Assert.NotNull(deserializedBytes);
             Assert.Equal(sourceBytes, deserializedBytes);
         }
@@ -89,9 +115,17 @@ namespace MessagePack.Tests
         [Fact]
         public void DeserializeNil()
         {
+            byte[] deserializedObj;
             var messagePackReader = new MessagePackReader(new byte[] { MessagePackCode.Nil });
+            try
+            {
+                deserializedObj = MessagePackSerializer.Deserialize<byte[]>(ref messagePackReader);
+            }
+            finally
+            {
+                messagePackReader.Dispose();
+            }
 
-            var deserializedObj = MessagePackSerializer.Deserialize<byte[]>(ref messagePackReader);
             Assert.Null(deserializedObj);
         }
 
@@ -109,8 +143,17 @@ namespace MessagePack.Tests
                 Value = Enumerable.Range(0, arrayLength).Select(i => unchecked((byte)i)).ToArray(), // long byte array
             };
             var messagePackBytes = SerializeByClassicMsgPack(foo, MsgPack.Serialization.SerializationMethod.Map);
+            Foo deserializedFoo;
             var oldSpecReader = new MessagePackReader(messagePackBytes);
-            Foo deserializedFoo = MessagePackSerializer.Deserialize<Foo>(ref oldSpecReader);
+            try
+            {
+                deserializedFoo = MessagePackSerializer.Deserialize<Foo>(ref oldSpecReader);
+            }
+            finally
+            {
+                oldSpecReader.Dispose();
+            }
+
             Assert.NotNull(deserializedFoo);
             Assert.Equal(foo.Id, deserializedFoo.Id);
             Assert.Equal(foo.Value, deserializedFoo.Value);

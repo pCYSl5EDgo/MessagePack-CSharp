@@ -24,13 +24,22 @@ namespace MessagePack.Tests
 
         private IEnumerable<string> IteratePropertyNames(ReadOnlyMemory<byte> bytes)
         {
+            string[] result;
             var reader = new MessagePackReader(bytes);
-            var mapCount = reader.ReadMapHeader();
-            var result = new string[mapCount];
-            for (int i = 0; i < mapCount; i++)
+
+            try
             {
-                result[i] = reader.ReadString();
-                reader.Skip(); // skip the value
+                var mapCount = reader.ReadMapHeader();
+                result = new string[mapCount];
+                for (int i = 0; i < mapCount; i++)
+                {
+                    result[i] = reader.ReadString();
+                    reader.Skip(); // skip the value
+                }
+            }
+            finally
+            {
+                reader.Dispose();
             }
 
             return result;

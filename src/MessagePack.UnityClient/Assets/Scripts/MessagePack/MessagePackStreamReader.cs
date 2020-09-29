@@ -162,13 +162,20 @@ namespace MessagePack
             {
                 var reader = new MessagePackReader(this.ReadData);
 
-                // Perf opportunity: instead of skipping from the start each time, we could incrementally skip across tries
-                // possibly as easy as simply keeping a count of how many tokens still need to be skipped (that we know about).
-                if (reader.TrySkip())
+                try
                 {
-                    this.endOfLastMessage = reader.Position;
-                    completeMessage = reader.Sequence.Slice(0, reader.Position);
-                    return true;
+                    // Perf opportunity: instead of skipping from the start each time, we could incrementally skip across tries
+                    // possibly as easy as simply keeping a count of how many tokens still need to be skipped (that we know about).
+                    if (reader.TrySkip())
+                    {
+                        this.endOfLastMessage = reader.Position;
+                        completeMessage = reader.Sequence.Slice(0, reader.Position);
+                        return true;
+                    }
+                }
+                finally
+                {
+                    reader.Dispose();
                 }
             }
 

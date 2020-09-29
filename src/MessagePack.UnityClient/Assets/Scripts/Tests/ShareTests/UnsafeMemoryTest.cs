@@ -33,8 +33,15 @@ namespace MessagePack.Tests
             var bin2 = MessagePackSerializer.Serialize(s);
             var bin3 = new Sequence<byte>();
             var bin3Writer = new MessagePackWriter(bin3);
-            bin3Writer.WriteRaw(bin1);
-            bin3Writer.Flush();
+            try
+            {
+                bin3Writer.WriteRaw(bin1);
+                bin3Writer.Flush();
+            }
+            finally
+            {
+                bin3Writer.Dispose();
+            }
 
             new ReadOnlySpan<byte>(bin1).SequenceEqual(bin2).IsTrue();
             new ReadOnlySpan<byte>(bin1).SequenceEqual(CodeGenHelpers.GetSpanFromSequence(bin3)).IsTrue();
@@ -51,8 +58,16 @@ namespace MessagePack.Tests
                 var src = Enumerable.Range(0, i).Select(x => (byte)x).ToArray();
                 var dst = new Sequence<byte>();
                 var dstWriter = new MessagePackWriter(dst);
-                (typeof(UnsafeMemory32).GetMethod("WriteRaw" + i).CreateDelegate(typeof(WriteDelegate)) as WriteDelegate).Invoke(ref dstWriter, src);
-                dstWriter.Flush();
+                try
+                {
+                    (typeof(UnsafeMemory32).GetMethod("WriteRaw" + i).CreateDelegate(typeof(WriteDelegate)) as WriteDelegate).Invoke(ref dstWriter, src);
+                    dstWriter.Flush();
+                }
+                finally
+                {
+                    dstWriter.Dispose();
+                }
+
                 dst.Length.Is(i);
                 src.AsSpan().SequenceEqual(CodeGenHelpers.GetSpanFromSequence(dst.AsReadOnlySequence)).IsTrue();
             }
@@ -63,8 +78,16 @@ namespace MessagePack.Tests
                 var src = Enumerable.Range(0, i).Select(x => (byte)x).ToArray();
                 var dst = new Sequence<byte>();
                 var dstWriter = new MessagePackWriter(dst);
-                (typeof(UnsafeMemory64).GetMethod("WriteRaw" + i).CreateDelegate(typeof(WriteDelegate)) as WriteDelegate).Invoke(ref dstWriter, src);
-                dstWriter.Flush();
+                try
+                {
+                    (typeof(UnsafeMemory64).GetMethod("WriteRaw" + i).CreateDelegate(typeof(WriteDelegate)) as WriteDelegate).Invoke(ref dstWriter, src);
+                    dstWriter.Flush();
+                }
+                finally
+                {
+                    dstWriter.Dispose();
+                }
+
                 dst.Length.Is(i);
                 src.AsSpan().SequenceEqual(CodeGenHelpers.GetSpanFromSequence(dst.AsReadOnlySequence)).IsTrue();
             }

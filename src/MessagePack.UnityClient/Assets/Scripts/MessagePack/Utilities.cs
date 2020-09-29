@@ -27,8 +27,17 @@ namespace MessagePack
             using (var sequenceRental = SequencePool.Shared.Rent())
             {
                 var writer = new MessagePackWriter(sequenceRental.Value);
-                action(ref writer, arg);
-                writer.Flush();
+
+                try
+                {
+                    action(ref writer, arg);
+                    writer.Flush();
+                }
+                finally
+                {
+                    writer.Dispose();
+                }
+
                 return sequenceRental.Value.AsReadOnlySequence.ToArray();
             }
         }

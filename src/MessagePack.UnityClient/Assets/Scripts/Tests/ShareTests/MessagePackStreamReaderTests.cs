@@ -23,24 +23,32 @@ namespace MessagePack.Tests
         {
             var sequence = new Sequence<byte>();
             var writer = new MessagePackWriter(sequence);
-            var positions = new List<SequencePosition>();
+            try
+            {
+                var positions = new List<SequencePosition>();
 
-            // First message
-            writer.Write(5);
-            writer.Flush();
-            positions.Add(sequence.AsReadOnlySequence.End);
+                // First message
+                writer.Write(5);
+                writer.Flush();
+                positions.Add(sequence.AsReadOnlySequence.End);
 
-            // Second message is more interesting.
-            writer.WriteArrayHeader(4);
-            writer.Write("Hi");
-            writer.Write("There + " + new string('3', 300)); // a long enough string that a multi-byte header is required.
-            writer.Write(new byte[300]); // a long enough byte array that a multi-byte header is required.
-            writer.WriteExtensionFormat(new ExtensionResult(1, new byte[300]));
-            writer.Flush();
-            positions.Add(sequence.AsReadOnlySequence.End);
+                // Second message is more interesting.
+                writer.WriteArrayHeader(4);
+                writer.Write("Hi");
+                writer.Write("There + " + new string('3', 300)); // a long enough string that a multi-byte header is required.
+                writer.Write(new byte[300]); // a long enough byte array that a multi-byte header is required.
+                writer.WriteExtensionFormat(new ExtensionResult(1, new byte[300]));
+                writer.Flush();
 
-            this.twoMessages = sequence.AsReadOnlySequence;
-            this.messagePositions = positions;
+                positions.Add(sequence.AsReadOnlySequence.End);
+
+                this.twoMessages = sequence.AsReadOnlySequence;
+                this.messagePositions = positions;
+            }
+            finally
+            {
+                writer.Dispose();
+            }
         }
 
         [Fact]

@@ -31,6 +31,8 @@ namespace MessagePack
         /// </summary>
         private SequenceReader<byte> reader;
 
+        private MessagePackReferenceCache cache;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MessagePackReader"/> struct.
         /// </summary>
@@ -83,6 +85,28 @@ namespace MessagePack
         /// </summary>
         public bool End => this.reader.End;
 
+        public MessagePackReferenceCache Cache
+        {
+            get
+            {
+                if (cache is null)
+                {
+                    cache = MessagePackReferenceCache.Rent();
+                }
+
+                return cache;
+            }
+        }
+
+        public void Dispose()
+        {
+            if (!(cache is null))
+            {
+                MessagePackReferenceCache.Return(cache);
+                cache = default;
+            }
+        }
+
         /// <summary>
         /// Gets a value indicating whether the reader position is pointing at a nil value.
         /// </summary>
@@ -131,7 +155,17 @@ namespace MessagePack
         /// Since this is a struct, copying it completely is as simple as returning itself
         /// from a property that isn't a "ref return" property.
         /// </devremarks>
-        public MessagePackReader CreatePeekReader() => this;
+        public MessagePackReader CreatePeekReader()
+        {
+            if (cache is null)
+            {
+                return this;
+            }
+
+            var answer = this;
+            answer.cache = Unsafe.As<MessagePackReferenceCache>(answer.cache.Clone());
+            return answer;
+        }
 
         /// <summary>
         /// Advances the reader to the next MessagePack primitive to be read.
