@@ -1,11 +1,16 @@
 ﻿// Copyright (c) All contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MessagePack.Experimental.Tests.CircularReference
+#if CSHARP_8_OR_NEWER || NETCOREAPP3_1
+#nullable enable
+#endif
+
+namespace MessagePack.Tests.CircularReference
 {
     [MessagePackObject]
     public sealed class CircleExample
     {
+#if CSHARP_8_OR_NEWER || NETCOREAPP3_1
         [Key(0)]
         public CircleExample? Parent { get; set; }
 
@@ -14,6 +19,16 @@ namespace MessagePack.Experimental.Tests.CircularReference
 
         [Key(2)]
         public CircleExample? Child1 { get; set; }
+#else
+        [Key(0)]
+        public CircleExample Parent { get; set; }
+
+        [Key(1)]
+        public CircleExample Child0 { get; set; }
+
+        [Key(2)]
+        public CircleExample Child1 { get; set; }
+#endif
 
         [Key(3)]
         public int Id { get; set; }

@@ -3,16 +3,15 @@
 
 using MessagePack.Formatters;
 using MessagePack.Resolvers;
-using NUnit.Framework;
+using Xunit;
 
-namespace MessagePack.Experimental.Tests.CircularReference
+namespace MessagePack.Tests.CircularReference
 {
     public class CircularReferenceTest
     {
-        private MessagePackSerializerOptions options = default!;
+        private MessagePackSerializerOptions options;
 
-        [OneTimeSetUp]
-        public void SetUp()
+        public CircularReferenceTest()
         {
             var resolver = CompositeResolver.Create(
                 new IMessagePackFormatter[]
@@ -23,7 +22,7 @@ namespace MessagePack.Experimental.Tests.CircularReference
             options = MessagePackSerializerOptions.Standard.WithResolver(resolver);
         }
 
-        [Test]
+        [Fact]
         public void NullTest()
         {
             var original = default(CircleExample);
@@ -31,12 +30,13 @@ namespace MessagePack.Experimental.Tests.CircularReference
             var binary = MessagePackSerializer.Serialize(original, options);
             var result = MessagePackSerializer.Deserialize<CircleExample>(binary, options);
 
-            Assert.IsNull(result);
+            result.IsNull();
         }
 
-        [TestCase(0)]
-        [TestCase(int.MaxValue)]
-        [TestCase(int.MinValue)]
+        [Theory]
+        [InlineData(0)]
+        [InlineData(int.MaxValue)]
+        [InlineData(int.MinValue)]
         public void FieldNullTest(int id)
         {
             var original = new CircleExample() { Id = id };
@@ -44,16 +44,17 @@ namespace MessagePack.Experimental.Tests.CircularReference
             var binary = MessagePackSerializer.Serialize(original, options);
             var result = MessagePackSerializer.Deserialize<CircleExample>(binary, options);
 
-            Assert.IsNotNull(result);
-            Assert.IsNull(result.Parent);
-            Assert.IsNull(result.Child0);
-            Assert.IsNull(result.Child1);
-            Assert.AreEqual(result.Id, id);
+            result.IsNotNull();
+            result.Parent.IsNull();
+            result.Child0.IsNull();
+            result.Child1.IsNull();
+            result.Id.IsStructuralEqual(id);
         }
 
-        [TestCase(0)]
-        [TestCase(int.MaxValue)]
-        [TestCase(int.MinValue)]
+        [Theory]
+        [InlineData(0)]
+        [InlineData(int.MaxValue)]
+        [InlineData(int.MinValue)]
         public void SelfParentTest(int id)
         {
             var original = new CircleExample() { Id = id };
@@ -62,16 +63,17 @@ namespace MessagePack.Experimental.Tests.CircularReference
             var binary = MessagePackSerializer.Serialize(original, options);
             var result = MessagePackSerializer.Deserialize<CircleExample>(binary, options);
 
-            Assert.IsNotNull(result);
-            Assert.AreSame(result.Parent, result);
-            Assert.IsNull(result.Child0);
-            Assert.IsNull(result.Child1);
-            Assert.AreEqual(result.Id, id);
+            result.IsNotNull();
+            result.Parent.IsSameReferenceAs(result);
+            result.Child0.IsNull();
+            result.Child1.IsNull();
+            result.Id.IsStructuralEqual(id);
         }
 
-        [TestCase(0, 1, 2)]
-        [TestCase(int.MaxValue, int.MinValue, -1)]
-        [TestCase(114514, 1919, -810931)]
+        [Theory]
+        [InlineData(0, 1, 2)]
+        [InlineData(int.MaxValue, int.MinValue, -1)]
+        [InlineData(114514, 1919, -810931)]
         public void SimpleTreeTest(int id0, int id1, int id2)
         {
             var child0 = new CircleExample() { Id = id1 };
@@ -88,20 +90,21 @@ namespace MessagePack.Experimental.Tests.CircularReference
             var binary = MessagePackSerializer.Serialize(original, options);
             var result = MessagePackSerializer.Deserialize<CircleExample>(binary, options);
 
-            Assert.IsNotNull(result);
-            Assert.IsNull(result.Parent);
-            Assert.IsNotNull(result.Child0);
-            Assert.AreSame(result.Child0!.Parent, result);
-            Assert.IsNotNull(result.Child1);
-            Assert.AreSame(result.Child1!.Parent, result);
-            Assert.AreEqual(result.Id, id0);
-            Assert.AreEqual(result.Child0.Id, id1);
-            Assert.AreEqual(result.Child1.Id, id2);
+            Assert.NotNull(result);
+            Assert.Null(result.Parent);
+            Assert.NotNull(result.Child0);
+            Assert.Same(result.Child0!.Parent, result);
+            Assert.NotNull(result.Child1);
+            Assert.Same(result.Child1!.Parent, result);
+            Assert.Equal(result.Id, id0);
+            Assert.Equal(result.Child0.Id, id1);
+            Assert.Equal(result.Child1.Id, id2);
         }
 
-        [TestCase(new int[] { 0, 1 })]
-        [TestCase(new int[] { 114, 514, -1919, 810931 })]
-        [TestCase(new int[] { 0, int.MinValue, int.MaxValue, -1, 33, -4 })]
+        [Theory]
+        [InlineData(new int[] { 0, 1 })]
+        [InlineData(new int[] { 114, 514, -1919, 810931 })]
+        [InlineData(new int[] { 0, int.MinValue, int.MaxValue, -1, 33, -4 })]
         public void ArrayTest(int[] array)
         {
             var original = new CircleExample[array.Length];
@@ -113,7 +116,7 @@ namespace MessagePack.Experimental.Tests.CircularReference
                 };
             }
 
-            original[0].Parent = original[^1];
+            original[0].Parent = original[original.Length - 1];
             original[1].Parent = original[0];
             for (var i = 2; i < original.Length; i++)
             {
@@ -121,7 +124,7 @@ namespace MessagePack.Experimental.Tests.CircularReference
                 original[i].Child0 = original[i - 2];
             }
 
-            original[^1].Child1 = original[0];
+            original[original.Length - 1].Child1 = original[0];
             for (var i = 0; i < original.Length - 1; i++)
             {
                 original[i].Child1 = original[i + 1];
@@ -172,14 +175,14 @@ namespace MessagePack.Experimental.Tests.CircularReference
             var binary = MessagePackSerializer.Serialize(original, options);
             var result = MessagePackSerializer.Deserialize<CircleExample[]>(binary, options);
 
-            Assert.IsNotNull(result);
-            Assert.AreEqual(array.Length, result.Length);
+            Assert.NotNull(result);
+            Assert.Equal(array.Length, result.Length);
 
             for (var i = 0; i < array.Length; i++)
             {
-                Assert.AreEqual(FindParentIndex(original, i), FindParentIndex(result, i));
-                Assert.AreEqual(FindChild0Index(original, i), FindChild0Index(result, i));
-                Assert.AreEqual(FindChild1Index(original, i), FindChild1Index(result, i));
+                Assert.Equal(FindParentIndex(original, i), FindParentIndex(result, i));
+                Assert.Equal(FindChild0Index(original, i), FindChild0Index(result, i));
+                Assert.Equal(FindChild1Index(original, i), FindChild1Index(result, i));
             }
         }
     }

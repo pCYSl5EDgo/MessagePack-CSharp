@@ -3,26 +3,46 @@
 
 #pragma warning disable SA1649 // File name should match first type name
 
-namespace MessagePack.Experimental.Tests.CircularReference
+#if CSHARP_8_OR_NEWER || NETCOREAPP3_1
+#nullable enable
+#endif
+
+namespace MessagePack.Tests.CircularReference
 {
     [MessagePackObject]
     public class TwinExample0
     {
+#if CSHARP_8_OR_NEWER || NETCOREAPP3_1
         [Key(0)]
         public string? Name { get; set; }
 
         [Key(1)]
         public TwinExample1? Partner { get; set; }
+#else
+        [Key(0)]
+        public string Name { get; set; }
+
+        [Key(1)]
+        public TwinExample1 Partner { get; set; }
+#endif
     }
 
     [MessagePackObject]
     public class TwinExample1
     {
+#if CSHARP_8_OR_NEWER || NETCOREAPP3_1
         [Key(0)]
         public string? Name { get; set; }
 
         [Key(1)]
         public TwinExample0? Partner { get; set; }
+#else
+        [Key(0)]
+        public string Name { get; set; }
+
+        [Key(1)]
+        public TwinExample0 Partner { get; set; }
+#endif
     }
 
     public sealed class TwinExample0Overwriter : IOverwriteMessagePackFormatter<TwinExample0>

@@ -3,16 +3,15 @@
 
 using MessagePack.Formatters;
 using MessagePack.Resolvers;
-using NUnit.Framework;
+using Xunit;
 
-namespace MessagePack.Experimental.Tests.CircularReference
+namespace MessagePack.Tests.CircularReference
 {
     public class TwinTest
     {
-        private MessagePackSerializerOptions options = default!;
+        private MessagePackSerializerOptions options;
 
-        [OneTimeSetUp]
-        public void SetUp()
+        public TwinTest()
         {
             var resolver = CompositeResolver.Create(
                 new IMessagePackFormatter[]
@@ -24,7 +23,7 @@ namespace MessagePack.Experimental.Tests.CircularReference
             options = MessagePackSerializerOptions.Standard.WithResolver(resolver);
         }
 
-        [Test]
+        [Fact]
         public void NullTest0()
         {
             var original = default(TwinExample0);
@@ -32,10 +31,10 @@ namespace MessagePack.Experimental.Tests.CircularReference
             var binary = MessagePackSerializer.Serialize(original, options);
             var result = MessagePackSerializer.Deserialize<TwinExample0>(binary, options);
 
-            Assert.IsNull(result);
+            Assert.Null(result);
         }
 
-        [Test]
+        [Fact]
         public void NullTest1()
         {
             var original = default(TwinExample1);
@@ -43,11 +42,12 @@ namespace MessagePack.Experimental.Tests.CircularReference
             var binary = MessagePackSerializer.Serialize(original, options);
             var result = MessagePackSerializer.Deserialize<TwinExample1>(binary, options);
 
-            Assert.IsNull(result);
+            Assert.Null(result);
         }
 
-        [TestCase("")]
-        [TestCase("名無しの権兵衛")]
+        [Theory]
+        [InlineData("")]
+        [InlineData("名無しの権兵衛")]
         public void FieldNullTest0(string name)
         {
             var original = new TwinExample0() { Name = name };
@@ -55,13 +55,14 @@ namespace MessagePack.Experimental.Tests.CircularReference
             var binary = MessagePackSerializer.Serialize(original, options);
             var result = MessagePackSerializer.Deserialize<TwinExample0>(binary, options);
 
-            Assert.IsNotNull(result);
-            Assert.IsNull(result.Partner);
-            Assert.AreEqual(result.Name, name);
+            Assert.NotNull(result);
+            Assert.Null(result.Partner);
+            Assert.Equal(result.Name, name);
         }
 
-        [TestCase("")]
-        [TestCase("名無しの権兵衛")]
+        [Theory]
+        [InlineData("")]
+        [InlineData("名無しの権兵衛")]
         public void FieldNullTest1(string name)
         {
             var original = new TwinExample1() { Name = name };
@@ -69,13 +70,14 @@ namespace MessagePack.Experimental.Tests.CircularReference
             var binary = MessagePackSerializer.Serialize(original, options);
             var result = MessagePackSerializer.Deserialize<TwinExample1>(binary, options);
 
-            Assert.IsNotNull(result);
-            Assert.IsNull(result.Partner);
-            Assert.AreEqual(result.Name, name);
+            Assert.NotNull(result);
+            Assert.Null(result.Partner);
+            Assert.Equal(result.Name, name);
         }
 
-        [TestCase("", "empty")]
-        [TestCase("名無しの権兵衛", "じゅげむじゅげむごこうのすりきれ")]
+        [Theory]
+        [InlineData("", "empty")]
+        [InlineData("名無しの権兵衛", "じゅげむじゅげむごこうのすりきれ")]
         public void MirrorTest(string name0, string name1)
         {
             var original0 = new TwinExample1() { Name = name0 };
@@ -89,11 +91,11 @@ namespace MessagePack.Experimental.Tests.CircularReference
             var binary = MessagePackSerializer.Serialize(original0, options);
             var result = MessagePackSerializer.Deserialize<TwinExample0>(binary, options);
 
-            Assert.IsNotNull(result);
-            Assert.IsNotNull(result.Partner);
-            Assert.AreEqual(result.Name, name0);
-            Assert.AreEqual(result.Partner!.Name, name1);
-            Assert.AreSame(result.Partner.Partner, result);
+            Assert.NotNull(result);
+            Assert.NotNull(result.Partner);
+            Assert.Equal(result.Name, name0);
+            Assert.Equal(result.Partner!.Name, name1);
+            Assert.Same(result.Partner.Partner, result);
         }
     }
 }

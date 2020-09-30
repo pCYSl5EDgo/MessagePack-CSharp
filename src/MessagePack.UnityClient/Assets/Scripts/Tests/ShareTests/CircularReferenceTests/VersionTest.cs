@@ -3,16 +3,15 @@
 
 using MessagePack.Formatters;
 using MessagePack.Resolvers;
-using NUnit.Framework;
+using Xunit;
 
-namespace MessagePack.Experimental.Tests.CircularReference
+namespace MessagePack.Tests.CircularReference
 {
     public class VersionTest
     {
-        private MessagePackSerializerOptions options = default!;
+        private MessagePackSerializerOptions options;
 
-        [OneTimeSetUp]
-        public void SetUp()
+        public VersionTest()
         {
             var resolver = CompositeResolver.Create(
                 new IMessagePackFormatter[]
@@ -23,7 +22,7 @@ namespace MessagePack.Experimental.Tests.CircularReference
             options = MessagePackSerializerOptions.Standard.WithResolver(resolver);
         }
 
-        [Test]
+        [Fact]
         public void DifferentVersionTest()
         {
             var original = new CircleArrayOld
@@ -48,15 +47,15 @@ namespace MessagePack.Experimental.Tests.CircularReference
             var binary = MessagePackSerializer.Serialize(original, options);
             var resultOld = MessagePackSerializer.Deserialize<CircleArrayOld>(binary, options);
 
-            Assert.IsNotNull(resultOld);
-            Assert.IsNotNull(resultOld.Array0);
-            Assert.IsNotNull(resultOld.Array1);
-            Assert.AreEqual(original.Array0.Length, resultOld.Array0!.Length);
-            Assert.AreEqual(original.Array1.Length, resultOld.Array1!.Length);
-            Assert.AreSame(resultOld.Array0[0].Parent, resultOld.Array1[0]);
-            Assert.AreSame(resultOld.Array0[1].Parent, resultOld.Array1[1]);
-            Assert.AreSame(resultOld.Array1[0].Parent, resultOld.Array0[0]);
-            Assert.AreSame(resultOld.Array1[1].Parent, resultOld.Array0[1]);
+            Assert.NotNull(resultOld);
+            Assert.NotNull(resultOld.Array0);
+            Assert.NotNull(resultOld.Array1);
+            Assert.Equal(original.Array0.Length, resultOld.Array0!.Length);
+            Assert.Equal(original.Array1.Length, resultOld.Array1!.Length);
+            Assert.Same(resultOld.Array0[0].Parent, resultOld.Array1[0]);
+            Assert.Same(resultOld.Array0[1].Parent, resultOld.Array1[1]);
+            Assert.Same(resultOld.Array1[0].Parent, resultOld.Array0[0]);
+            Assert.Same(resultOld.Array1[1].Parent, resultOld.Array0[1]);
 
             Assert.Throws<MessagePackSerializationException>(() => MessagePackSerializer.Deserialize<CircleArrayNew>(binary, options));
         }
@@ -65,20 +64,36 @@ namespace MessagePack.Experimental.Tests.CircularReference
     [MessagePackObject]
     public class CircleArrayOld
     {
+#if CSHARP_8_OR_NEWER || NETCOREAPP3_1
         [Key(0)]
         public CircleExample[]? Array0 { get; set; }
 
         [Key(1)]
         public CircleExample[]? Array1 { get; set; }
+#else
+        [Key(0)]
+        public CircleExample[] Array0 { get; set; }
+
+        [Key(1)]
+        public CircleExample[] Array1 { get; set; }
+#endif
     }
 
     [MessagePackObject]
     public class CircleArrayNew
     {
+#if CSHARP_8_OR_NEWER || NETCOREAPP3_1
         [IgnoreMember]
         public CircleExample[]? Array0 { get; set; }
 
         [Key(1)]
         public CircleExample[]? Array1 { get; set; }
+#else
+        [IgnoreMember]
+        public CircleExample[] Array0 { get; set; }
+
+        [Key(1)]
+        public CircleExample[] Array1 { get; set; }
+#endif
     }
 }
