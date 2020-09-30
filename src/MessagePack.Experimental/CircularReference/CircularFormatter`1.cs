@@ -25,15 +25,18 @@ namespace MessagePack.Formatters
                 return;
             }
 
+            writer.WriteMapHeader(1);
             var cache = writer.Cache;
             var index = cache.FindIndex(value);
             if (index >= 0)
             {
+                writer.WriteNil();
                 writer.Write((uint)index);
                 return;
             }
 
-            cache.Add(value);
+            index = cache.Add(value);
+            writer.Write((uint)index);
             Formatter.Serialize(ref writer, value, options);
         }
 
@@ -44,28 +47,31 @@ namespace MessagePack.Formatters
                 return default;
             }
 
-            var cache = reader.Cache;
-            if (TryReadUInt32(ref reader, out var index))
+            var count = reader.ReadMapHeader();
+            if (count != 1)
             {
+                throw new MessagePackSerializationException($"type {typeof(T).FullName} should be encoded as length 1 map. actual: {count}");
+            }
+
+            var cache = reader.Cache;
+            if (reader.TryReadNil())
+            {
+                var index = reader.ReadUInt32();
                 return (T)cache.Span[(int)index];
             }
-
-            var answer = new T();
-            cache.Add(answer);
-            Overwriter.DeserializeOverwrite(ref reader, options, ref answer);
-            return answer;
-        }
-
-        private static bool TryReadUInt32(ref MessagePackReader reader, out uint value)
-        {
-            if (reader.NextMessagePackType == MessagePackType.Integer)
+            else
             {
-                value = reader.ReadUInt32();
-                return true;
-            }
+                var index = (int)reader.ReadUInt32();
+                var answer = new T();
+                var addedIndex = cache.Add(answer);
+                if (index != addedIndex)
+                {
+                    throw new MessagePackSerializationException($"Object reference cache index mismatch! expected: {index}, actual: {addedIndex}");
+                }
 
-            value = default;
-            return false;
+                Overwriter.DeserializeOverwrite(ref reader, options, ref answer);
+                return answer;
+            }
         }
     }
 }

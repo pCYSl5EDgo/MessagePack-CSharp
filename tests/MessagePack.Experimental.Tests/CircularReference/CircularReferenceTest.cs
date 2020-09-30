@@ -98,5 +98,89 @@ namespace MessagePack.Experimental.Tests.CircularReference
             Assert.AreEqual(result.Child0.Id, id1);
             Assert.AreEqual(result.Child1.Id, id2);
         }
+
+        [TestCase(new int[] { 0, 1 })]
+        [TestCase(new int[] { 114, 514, -1919, 810931 })]
+        [TestCase(new int[] { 0, int.MinValue, int.MaxValue, -1, 33, -4 })]
+        public void ArrayTest(int[] array)
+        {
+            var original = new CircleExample[array.Length];
+            for (var i = 0; i < original.Length; i++)
+            {
+                original[i] = new CircleExample
+                {
+                    Id = array[i],
+                };
+            }
+
+            original[0].Parent = original[^1];
+            original[1].Parent = original[0];
+            for (var i = 2; i < original.Length; i++)
+            {
+                original[i].Parent = original[i - 1];
+                original[i].Child0 = original[i - 2];
+            }
+
+            original[^1].Child1 = original[0];
+            for (var i = 0; i < original.Length - 1; i++)
+            {
+                original[i].Child1 = original[i + 1];
+            }
+
+            static int FindParentIndex(CircleExample[] array, int index)
+            {
+                var item = array[index].Parent;
+                for (var i = 0; i < array.Length; i++)
+                {
+                    if (array[i] == item)
+                    {
+                        return i;
+                    }
+                }
+
+                return -1;
+            }
+
+            static int FindChild0Index(CircleExample[] array, int index)
+            {
+                var item = array[index].Child0;
+                for (var i = 0; i < array.Length; i++)
+                {
+                    if (array[i] == item)
+                    {
+                        return i;
+                    }
+                }
+
+                return -1;
+            }
+
+            static int FindChild1Index(CircleExample[] array, int index)
+            {
+                var item = array[index].Child1;
+                for (var i = 0; i < array.Length; i++)
+                {
+                    if (array[i] == item)
+                    {
+                        return i;
+                    }
+                }
+
+                return -1;
+            }
+
+            var binary = MessagePackSerializer.Serialize(original, options);
+            var result = MessagePackSerializer.Deserialize<CircleExample[]>(binary, options);
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(array.Length, result.Length);
+
+            for (var i = 0; i < array.Length; i++)
+            {
+                Assert.AreEqual(FindParentIndex(original, i), FindParentIndex(result, i));
+                Assert.AreEqual(FindChild0Index(original, i), FindChild0Index(result, i));
+                Assert.AreEqual(FindChild1Index(original, i), FindChild1Index(result, i));
+            }
+        }
     }
 }

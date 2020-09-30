@@ -13,6 +13,15 @@ using BenchmarkDotNet.Attributes;
 
 namespace Benchmark
 {
+    public class BaseSpeedComparisonTest
+    {
+        [Benchmark]
+        public byte[] SerializeOldInt32() => oldmsgpack::MessagePack.MessagePackSerializer.Serialize(14);
+
+        [Benchmark]
+        public byte[] SerializeNewInt32() => newmsgpack::MessagePack.MessagePackSerializer.Serialize(14);
+    }
+
     [newmsgpack::MessagePack.MessagePackObjectAttribute]
     public struct Matrix4x4
     {

@@ -10,6 +10,7 @@ namespace HardwareIntrinsicsBenchmark
     {
         private static void Main()
         {
+            BenchmarkRunner.Run<BaseSpeedComparisonTest>();
             BenchmarkRunner.Run<UnsafeUnmanagedStructArrayBenchmark>();
             BenchmarkRunner.Run<BooleanArrayBenchmarkMessagePackNoSingleInstructionMultipleDataVsMessagePackSingleInstructionMultipleData>();
             BenchmarkRunner.Run<Int8ArrayBenchmarkMessagePackNoSingleInstructionMultipleDataVsMessagePackSingleInstructionMultipleData>();

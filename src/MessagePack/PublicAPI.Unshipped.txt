@@ -70,7 +70,7 @@ MessagePack.ImmutableCollection.InterfaceImmutableStackFormatter<T>.InterfaceImm
 MessagePack.MessagePackReader.Cache.get -> MessagePack.MessagePackReferenceCache
 MessagePack.MessagePackReader.Dispose() -> void
 MessagePack.MessagePackReferenceCache
-MessagePack.MessagePackReferenceCache.Add(object reference) -> void
+MessagePack.MessagePackReferenceCache.Add(object reference) -> int
 MessagePack.MessagePackReferenceCache.Capacity.get -> int
 MessagePack.MessagePackReferenceCache.Capacity.set -> void
 MessagePack.MessagePackReferenceCache.Clone() -> MessagePack.MessagePackReferenceCache

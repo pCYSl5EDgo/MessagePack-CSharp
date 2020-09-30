@@ -107,7 +107,7 @@ namespace MessagePack
             }
         }
 
-        public void Add(object reference)
+        public int Add(object reference)
         {
             if (count == array.Length)
             {
@@ -125,7 +125,8 @@ namespace MessagePack
                 }
             }
 
-            array[count++] = reference;
+            array[count] = reference;
+            return count++;
         }
 
         public int FindIndex(object reference)
