@@ -25,7 +25,7 @@ namespace MessagePack.Experimental.Tests.CircularReference
         public TwinExample0? Partner { get; set; }
     }
 
-    public sealed class TwinExample0Overwriter : IMessagePackDeserializeOverwriter<TwinExample0>
+    public sealed class TwinExample0Overwriter : IOverwriteMessagePackFormatter<TwinExample0>
     {
         public static readonly TwinExample0Overwriter Instance = new TwinExample0Overwriter();
 
@@ -33,7 +33,7 @@ namespace MessagePack.Experimental.Tests.CircularReference
         {
         }
 
-        public void DeserializeOverwrite(ref MessagePackReader reader, MessagePackSerializerOptions options, ref TwinExample0 value)
+        public void DeserializeTo(ref MessagePackReader reader, ref TwinExample0 value, MessagePackSerializerOptions options)
         {
             var length = reader.ReadArrayHeader();
             if (length == 0)
@@ -60,7 +60,7 @@ namespace MessagePack.Experimental.Tests.CircularReference
         }
     }
 
-    public sealed class TwinExample1Overwriter : IMessagePackDeserializeOverwriter<TwinExample1>
+    public sealed class TwinExample1Overwriter : IOverwriteMessagePackFormatter<TwinExample1>
     {
         public static readonly TwinExample1Overwriter Instance = new TwinExample1Overwriter();
 
@@ -68,7 +68,7 @@ namespace MessagePack.Experimental.Tests.CircularReference
         {
         }
 
-        public void DeserializeOverwrite(ref MessagePackReader reader, MessagePackSerializerOptions options, ref TwinExample1 value)
+        public void DeserializeTo(ref MessagePackReader reader, ref TwinExample1 value, MessagePackSerializerOptions options)
         {
             var length = reader.ReadArrayHeader();
             if (length == 0)

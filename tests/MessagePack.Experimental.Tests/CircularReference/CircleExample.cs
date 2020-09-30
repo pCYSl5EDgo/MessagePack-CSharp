@@ -19,7 +19,7 @@ namespace MessagePack.Experimental.Tests.CircularReference
         public int Id { get; set; }
     }
 
-    public sealed class CircleExampleOverwriter : IMessagePackDeserializeOverwriter<CircleExample>
+    public sealed class CircleExampleOverwriter : IOverwriteMessagePackFormatter<CircleExample>
     {
         public static readonly CircleExampleOverwriter Instance = new CircleExampleOverwriter();
 
@@ -27,7 +27,7 @@ namespace MessagePack.Experimental.Tests.CircularReference
         {
         }
 
-        public void DeserializeOverwrite(ref MessagePackReader reader, MessagePackSerializerOptions options, ref CircleExample value)
+        public void DeserializeTo(ref MessagePackReader reader, ref CircleExample value, MessagePackSerializerOptions options)
         {
             var length = reader.ReadArrayHeader();
             if (length == 0)

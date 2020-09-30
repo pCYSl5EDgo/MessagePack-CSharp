@@ -7,6 +7,10 @@ MessagePack.Formatters.ByteReadOnlyMemoryFormatter.Serialize(ref MessagePack.Mes
 MessagePack.Formatters.ByteReadOnlySequenceFormatter
 MessagePack.Formatters.ByteReadOnlySequenceFormatter.Deserialize(ref MessagePack.MessagePackReader reader, MessagePack.MessagePackSerializerOptions options) -> System.Buffers.ReadOnlySequence<byte>
 MessagePack.Formatters.ByteReadOnlySequenceFormatter.Serialize(ref MessagePack.MessagePackWriter writer, System.Buffers.ReadOnlySequence<byte> value, MessagePack.MessagePackSerializerOptions options) -> void
+MessagePack.Formatters.CircularFormatter<T>
+MessagePack.Formatters.CircularFormatter<T>.CircularFormatter(MessagePack.Formatters.IMessagePackFormatter<T> formatter, MessagePack.IOverwriteMessagePackFormatter<T> overwriter) -> void
+MessagePack.Formatters.CircularFormatter<T>.Deserialize(ref MessagePack.MessagePackReader reader, MessagePack.MessagePackSerializerOptions options) -> T
+MessagePack.Formatters.CircularFormatter<T>.Serialize(ref MessagePack.MessagePackWriter writer, T value, MessagePack.MessagePackSerializerOptions options) -> void
 MessagePack.Formatters.ExpandoObjectFormatter
 MessagePack.Formatters.ExpandoObjectFormatter.Deserialize(ref MessagePack.MessagePackReader reader, MessagePack.MessagePackSerializerOptions options) -> System.Dynamic.ExpandoObject
 MessagePack.Formatters.ExpandoObjectFormatter.Serialize(ref MessagePack.MessagePackWriter writer, System.Dynamic.ExpandoObject value, MessagePack.MessagePackSerializerOptions options) -> void
@@ -32,6 +36,8 @@ MessagePack.Formatters.ReadOnlySequenceFormatter<T>.Serialize(ref MessagePack.Me
 MessagePack.Formatters.TypeFormatter<T>
 MessagePack.Formatters.TypeFormatter<T>.Deserialize(ref MessagePack.MessagePackReader reader, MessagePack.MessagePackSerializerOptions options) -> T
 MessagePack.Formatters.TypeFormatter<T>.Serialize(ref MessagePack.MessagePackWriter writer, T value, MessagePack.MessagePackSerializerOptions options) -> void
+MessagePack.IOverwriteMessagePackFormatter<T>
+MessagePack.IOverwriteMessagePackFormatter<T>.DeserializeTo(ref MessagePack.MessagePackReader reader, ref T value, MessagePack.MessagePackSerializerOptions options) -> void
 MessagePack.ImmutableCollection.ImmutableArrayFormatter<T>
 MessagePack.ImmutableCollection.ImmutableArrayFormatter<T>.Deserialize(ref MessagePack.MessagePackReader reader, MessagePack.MessagePackSerializerOptions options) -> System.Collections.Immutable.ImmutableArray<T>
 MessagePack.ImmutableCollection.ImmutableArrayFormatter<T>.ImmutableArrayFormatter() -> void
@@ -121,6 +127,8 @@ override MessagePack.ImmutableCollection.InterfaceImmutableSetFormatter<T>.Creat
 override MessagePack.ImmutableCollection.InterfaceImmutableStackFormatter<T>.Add(T[] collection, int index, T value, MessagePack.MessagePackSerializerOptions options) -> void
 override MessagePack.ImmutableCollection.InterfaceImmutableStackFormatter<T>.Complete(T[] intermediateCollection) -> System.Collections.Immutable.IImmutableStack<T>
 override MessagePack.ImmutableCollection.InterfaceImmutableStackFormatter<T>.Create(int count, MessagePack.MessagePackSerializerOptions options) -> T[]
+readonly MessagePack.Formatters.CircularFormatter<T>.Formatter -> MessagePack.Formatters.IMessagePackFormatter<T>
+readonly MessagePack.Formatters.CircularFormatter<T>.Overwriter -> MessagePack.IOverwriteMessagePackFormatter<T>
 static MessagePack.MessagePackReferenceCache.Rent(uint minimumLength = 256) -> MessagePack.MessagePackReferenceCache
 static MessagePack.MessagePackReferenceCache.Return(MessagePack.MessagePackReferenceCache cache) -> void
 static readonly MessagePack.Formatters.ByteMemoryFormatter.Instance -> MessagePack.Formatters.ByteMemoryFormatter

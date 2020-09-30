@@ -1,23 +1,43 @@
 ﻿// Copyright (c) All contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if CSHARP_8_OR_NEWER || NETCOREAPP3_1
+#nullable enable
+#endif
+
 namespace MessagePack.Formatters
 {
+#if CSHARP_8_OR_NEWER || NETCOREAPP3_1
     public sealed class CircularFormatter<T> : IMessagePackFormatter<T?>
+#else
+    public sealed class CircularFormatter<T> : IMessagePackFormatter<T>
+#endif
         where T : class, new()
     {
 #pragma warning disable SA1401 // Fields should be private
+#if CSHARP_8_OR_NEWER || NETCOREAPP3_1
         public readonly IMessagePackFormatter<T?> Formatter;
-        public readonly IMessagePackDeserializeOverwriter<T> Overwriter;
+#else
+        public readonly IMessagePackFormatter<T> Formatter;
+#endif
+        public readonly IOverwriteMessagePackFormatter<T> Overwriter;
 #pragma warning restore SA1401 // Fields should be private
 
-        public CircularFormatter(IMessagePackFormatter<T?> formatter, IMessagePackDeserializeOverwriter<T> overwriter)
+#if CSHARP_8_OR_NEWER || NETCOREAPP3_1
+        public CircularFormatter(IMessagePackFormatter<T?> formatter, IOverwriteMessagePackFormatter<T> overwriter)
+#else
+        public CircularFormatter(IMessagePackFormatter<T> formatter, IOverwriteMessagePackFormatter<T> overwriter)
+#endif
         {
             Formatter = formatter;
             Overwriter = overwriter;
         }
 
+#if CSHARP_8_OR_NEWER || NETCOREAPP3_1
         public void Serialize(ref MessagePackWriter writer, T? value, MessagePackSerializerOptions options)
+#else
+        public void Serialize(ref MessagePackWriter writer, T value, MessagePackSerializerOptions options)
+#endif
         {
             if (value is null)
             {
@@ -40,7 +60,11 @@ namespace MessagePack.Formatters
             Formatter.Serialize(ref writer, value, options);
         }
 
+#if CSHARP_8_OR_NEWER || NETCOREAPP3_1
         public T? Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+#else
+        public T Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+#endif
         {
             if (reader.TryReadNil())
             {
@@ -69,7 +93,7 @@ namespace MessagePack.Formatters
                     throw new MessagePackSerializationException($"Object reference cache index mismatch! expected: {index}, actual: {addedIndex}");
                 }
 
-                Overwriter.DeserializeOverwrite(ref reader, options, ref answer);
+                Overwriter.DeserializeTo(ref reader, ref answer, options);
                 return answer;
             }
         }
