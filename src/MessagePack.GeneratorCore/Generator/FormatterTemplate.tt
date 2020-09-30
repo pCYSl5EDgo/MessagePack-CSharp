@@ -24,47 +24,91 @@ namespace <#= Namespace #>
     using System;
     using System.Buffers;
     using MessagePack;
-<# foreach(var objInfo in ObjectSerializationInfos) {
-    bool isFormatterResolverNecessary = ShouldUseFormatterResolverHelper.ShouldUseFormatterResolver(objInfo.Members);#>
+<#
+foreach (var objInfo in ObjectSerializationInfos)
+{
+    bool isFormatterResolverNecessary = ShouldUseFormatterResolverHelper.ShouldUseFormatterResolver(objInfo.Members);
+#>
 
     public sealed class <#= objInfo.Name #>Formatter<#= (objInfo.IsOpenGenericType ? $"<{string.Join(",", objInfo.GenericTypeParameters.Select(x => x.Name))}>" : "") #> : global::MessagePack.Formatters.IMessagePackFormatter<<#= objInfo.FullName #>>
-<# foreach(var typeArg in objInfo.GenericTypeParameters.Where(x => x.HasConstraints)) { #>
-        where <#= typeArg.Name #> : <#= typeArg.Constraints #>
-<# } #>
+<#
+    foreach (var typeArg in objInfo.GenericTypeParameters.Where(x => x.HasConstraints))
     {
-<# foreach(var item in objInfo.Members) { #>
-<# if(item.CustomFormatterTypeName != null) { #>
+#>
+        where <#= typeArg.Name #> : <#= typeArg.Constraints #>
+<#
+    }
+#>
+    {
+<#
+    foreach (var item in objInfo.Members)
+    {
+        if (item.CustomFormatterTypeName != null)
+        {
+#>
         <#= item.CustomFormatterTypeName #> __<#= item.Name #>CustomFormatter__ = new <#= item.CustomFormatterTypeName #>();
-<# } #>
-<# } #>
+<#
+        }
+    }
+#>
 
         public void Serialize(ref MessagePackWriter writer, <#= objInfo.FullName #> value, global::MessagePack.MessagePackSerializerOptions options)
         {
-<# if( objInfo.IsClass) { #>
+<#
+    if (objInfo.IsClass)
+    {
+#>
             if (value == null)
             {
                 writer.WriteNil();
                 return;
             }
 
-<# }
+<#
+    }
 
-  if (isFormatterResolverNecessary) { #>
+    if (isFormatterResolverNecessary)
+    {
+#>
             IFormatterResolver formatterResolver = options.Resolver;
-<#}
+<#
+    }
 
-  if(objInfo.HasIMessagePackSerializationCallbackReceiver && objInfo.NeedsCastOnBefore) { #>
+    if (objInfo.HasIMessagePackSerializationCallbackReceiver)
+    {
+        if (objInfo.NeedsCastOnBefore)
+        {
+#>
             ((IMessagePackSerializationCallbackReceiver)value).OnBeforeSerialize();
-<# } else if(objInfo.HasIMessagePackSerializationCallbackReceiver) { #>
+<#
+        }
+        else
+        {
+#>
             value.OnBeforeSerialize();
-<# } #>
+<#
+        }
+    }
+#>
             writer.WriteArrayHeader(<#= objInfo.MaxKey + 1 #>);
-<# for(var i =0; i<= objInfo.MaxKey; i++) { var member = objInfo.GetMember(i); #>
-<# if( member == null) { #>
+<#
+    for(var i = 0; i <= objInfo.MaxKey; i++)
+    {
+        var member = objInfo.GetMember(i);
+        if( member == null)
+        {
+#>
             writer.WriteNil();
-<# } else { #>
+<#
+        }
+        else
+        {
+#>
             <#= member.GetSerializeMethodString() #>;
-<# } } #>
+<#
+        }
+    }
+#>
         }
 
         public <#= objInfo.FullName #> Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options)

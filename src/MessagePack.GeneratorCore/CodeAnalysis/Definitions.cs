@@ -42,6 +42,8 @@ namespace MessagePackCompiler.CodeAnalysis
             get { return !this.IsClass; }
         }
 
+        public bool IsReferenceTracker { get; set; }
+
         public MemberSerializationInfo[] ConstructorParameters { get; set; }
 
         public MemberSerializationInfo[] Members { get; set; }

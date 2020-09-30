@@ -1013,6 +1013,14 @@ namespace MessagePackCompiler.CodeAnalysis
                 }
             }
 
+            var constructorParameterArray = constructorParameters.ToArray();
+            var canTrack = isClass & constructorParameterArray.Length == 0;
+            var shouldTrack = contractAttr.ConstructorArguments.Length >= 2 && (bool)contractAttr.ConstructorArguments[1].Value;
+            if (!canTrack && shouldTrack)
+            {
+                throw new MessagePackGeneratorResolveFailedException("No zero-parameter constructor. type:" + type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+            }
+
             var hasSerializationConstructor = type.AllInterfaces.Any(x => x.ApproximatelyEqual(this.typeReferences.IMessagePackSerializationCallbackReceiver));
             var needsCastOnBefore = true;
             var needsCastOnAfter = true;
@@ -1029,8 +1037,9 @@ namespace MessagePackCompiler.CodeAnalysis
                 GenericTypeParameters = isOpenGenericType
                     ? type.TypeParameters.Select(ToGenericTypeParameterInfo).ToArray()
                     : Array.Empty<GenericTypeParameterInfo>(),
-                ConstructorParameters = constructorParameters.ToArray(),
+                ConstructorParameters = constructorParameterArray,
                 IsIntKey = isIntKey,
+                IsReferenceTracker = canTrack & shouldTrack,
                 Members = isIntKey ? intMembers.Values.ToArray() : stringMembers.Values.ToArray(),
                 Name = isOpenGenericType ? GetGenericFormatterClassName(type) : GetMinimallyQualifiedClassName(type),
                 FullName = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),

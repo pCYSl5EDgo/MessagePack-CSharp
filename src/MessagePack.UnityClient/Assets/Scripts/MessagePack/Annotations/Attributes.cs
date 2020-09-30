@@ -12,9 +12,12 @@ namespace MessagePack
     {
         public bool KeyAsPropertyName { get; private set; }
 
-        public MessagePackObjectAttribute(bool keyAsPropertyName = false)
+        public bool TrackReference { get; private set; }
+
+        public MessagePackObjectAttribute(bool keyAsPropertyName = false, bool trackReference = false)
         {
             this.KeyAsPropertyName = keyAsPropertyName;
+            this.TrackReference = trackReference;
         }
     }
 
