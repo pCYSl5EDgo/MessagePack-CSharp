@@ -199,9 +199,17 @@ foreach (var objInfo in ObjectSerializationInfos)
 
     }
 
-            this.Write("            }\r\n\r\n            ");
+            this.Write("            }\r\n\r\n");
+
+    bool canOverwriteMember = objInfo.ConstructorParameters.Length == 0;
+    if (canOverwriteMember)
+    {
+
+            this.Write("            var ____result = new ");
             this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
-            this.Write(" ____result;\r\n");
+            this.Write("();\r\n");
+
+    }
 
     if (objInfo.IsReferenceTracker)
     {
@@ -278,20 +286,19 @@ foreach (var objInfo in ObjectSerializationInfos)
                       reader.Skip();
                       continue;
 ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(StringKeyFormatterDeserializeHelper.Classify(objInfo.Members, "                    ", objInfo.IsReferenceTracker)));
+            this.Write(this.ToStringHelper.ToStringWithCulture(StringKeyFormatterDeserializeHelper.Classify(objInfo.Members, "                    ", canOverwriteMember)));
             this.Write("\r\n                }\r\n            }\r\n\r\n");
 
-        if (!objInfo.IsReferenceTracker)
+        if (!canOverwriteMember)
         {
 
-            this.Write("            ____result = new ");
+            this.Write("            var ____result = new ");
             this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.GetConstructorString()));
-            this.Write(";\r\n\r\n");
+            this.Write(";\r\n");
 
-        }
 
-        foreach (var member in objInfo.Members.Where(x => x.IsWritable))
-        {
+            foreach (var member in objInfo.Members.Where(x => x.IsWritable))
+            {
 
             this.Write("            ____result.");
             this.Write(this.ToStringHelper.ToStringWithCulture(member.Name));
@@ -299,10 +306,8 @@ foreach (var objInfo in ObjectSerializationInfos)
             this.Write(this.ToStringHelper.ToStringWithCulture(member.Name));
             this.Write("__;\r\n");
 
+            }
         }
-
-            this.Write("\r\n");
-
     }
 
     if (objInfo.HasIMessagePackSerializationCallbackReceiver)

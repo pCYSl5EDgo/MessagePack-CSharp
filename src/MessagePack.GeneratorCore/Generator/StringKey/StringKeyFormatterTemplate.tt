@@ -159,8 +159,15 @@ foreach (var objInfo in ObjectSerializationInfos)
 #>
             }
 
-            <#= objInfo.FullName #> ____result;
 <#
+    bool canOverwriteMember = objInfo.ConstructorParameters.Length == 0;
+    if (canOverwriteMember)
+    {
+#>
+            var ____result = new <#= objInfo.FullName #>();
+<#
+    }
+
     if (objInfo.IsReferenceTracker)
     {
 #>
@@ -230,28 +237,24 @@ foreach (var objInfo in ObjectSerializationInfos)
                     FAIL:
                       reader.Skip();
                       continue;
-<#= StringKeyFormatterDeserializeHelper.Classify(objInfo.Members, "                    ", objInfo.IsReferenceTracker) #>
+<#= StringKeyFormatterDeserializeHelper.Classify(objInfo.Members, "                    ", canOverwriteMember) #>
                 }
             }
 
 <#
-        if (!objInfo.IsReferenceTracker)
+        if (!canOverwriteMember)
         {
 #>
-            ____result = new <#= objInfo.GetConstructorString() #>;
-
+            var ____result = new <#= objInfo.GetConstructorString() #>;
 <#
-        }
 
-        foreach (var member in objInfo.Members.Where(x => x.IsWritable))
-        {
+            foreach (var member in objInfo.Members.Where(x => x.IsWritable))
+            {
 #>
             ____result.<#= member.Name #> = __<#= member.Name #>__;
 <#
+            }
         }
-#>
-
-<#
     }
 
     if (objInfo.HasIMessagePackSerializationCallbackReceiver)
