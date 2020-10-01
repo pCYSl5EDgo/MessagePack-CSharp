@@ -121,6 +121,25 @@ foreach (var objInfo in ObjectSerializationInfos)
         }
     }
 
+    if (objInfo.IsReferenceTracker)
+    {
+
+            this.Write(@"            writer.WriteMapHeader(1);
+            var cache = writer.Cache;
+            var index = cache.FindIndex(value);
+            if (index >= 0)
+            {
+                writer.WriteNil();
+                writer.Write((uint)index);
+                return;
+            }
+
+            index = cache.Add(value);
+            writer.Write((uint)index);
+");
+
+    }
+
             this.Write("            writer.WriteArrayHeader(");
             this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.MaxKey + 1));
             this.Write(");\r\n");
@@ -174,12 +193,41 @@ foreach (var objInfo in ObjectSerializationInfos)
     }
 
     bool canOverwriteMember = objInfo.ConstructorParameters.Length == 0;
+    if (objInfo.IsReferenceTracker)
+    {
+
+            this.Write("            var count = reader.ReadMapHeader();\r\n            if (count != 1)\r\n   " +
+                    "         {\r\n                throw new MessagePackSerializationException(\"type ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
+            this.Write(" should be encoded as length 1 map. actual: {count}\");\r\n            }\r\n\r\n        " +
+                    "    var cache = reader.Cache;\r\n            if (reader.TryReadNil())\r\n           " +
+                    " {\r\n                return (");
+            this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
+            this.Write(")cache.Span[(int)reader.ReadUInt32()];\r\n            }\r\n\r\n            var index = " +
+                    "(int)reader.ReadUInt32();\r\n            var ____result = new ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
+            this.Write(@"();
+            var addedIndex = cache.Add(____result);
+            if (index != addedIndex)
+            {
+                throw new MessagePackSerializationException($""Object reference cache index mismatch! expected: {index}, actual: {addedIndex}"");
+            }
+");
+
+    }
+
     if (objInfo.Members.Length == 0)
     {
+        if (!objInfo.IsReferenceTracker)
+        {
 
             this.Write("            var ____result = new ");
             this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
-            this.Write("();\r\n            reader.Skip();\r\n");
+            this.Write("();\r\n");
+
+        }      
+
+            this.Write("            reader.Skip();\r\n");
 
     }
     else
@@ -190,11 +238,14 @@ foreach (var objInfo in ObjectSerializationInfos)
 
         if (canOverwriteMember)
         {
+            if (!objInfo.IsReferenceTracker)
+            {
 
             this.Write("            var ____result = new ");
             this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
             this.Write("();\r\n");
 
+            }
         }
         else
         {
