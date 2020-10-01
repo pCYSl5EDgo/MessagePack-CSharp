@@ -131,14 +131,6 @@ foreach (var objInfo in ObjectSerializationInfos)
             }
 
 <#
-    bool canOverwriteMember = objInfo.ConstructorParameters.Length == 0;
-    if (canOverwriteMember)
-    {
-#>
-            var ____result = new <#= objInfo.FullName #>();
-<#
-    }
-
     if (isFormatterResolverNecessary)
     {
 #>
@@ -146,9 +138,11 @@ foreach (var objInfo in ObjectSerializationInfos)
 <#
     }
 
+    bool canOverwriteMember = objInfo.ConstructorParameters.Length == 0;
     if (objInfo.Members.Length == 0)
     {
 #>
+            var ____result = new <#= objInfo.FullName #>();
             reader.Skip();
 <#
     }
@@ -158,7 +152,13 @@ foreach (var objInfo in ObjectSerializationInfos)
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
 <#
-        if (!canOverwriteMember)
+        if (canOverwriteMember)
+        {
+#>
+            var ____result = new <#= objInfo.FullName #>();
+<#
+        }
+        else
         {
             foreach (var member in objInfo.Members)
             {
@@ -176,24 +176,25 @@ foreach (var objInfo in ObjectSerializationInfos)
 <#
         foreach (var member in objInfo.Members)
         {
-#>
-                    case <#= member.IntKey #>:
-<#
             if (canOverwriteMember)
             {
+                if (member.IsWritable)
+                {
 #>
+                    case <#= member.IntKey #>:
                         ____result.<#= member.Name #> = <#= member.GetDeserializeMethodString() #>;
+                        break;
 <#
+                }
             }
             else
             {
 #>
+                    case <#= member.IntKey #>:
                         __<#= member.Name #>__ = <#= member.GetDeserializeMethodString() #>;
-<#
-            }
-#>
                         break;
 <#
+            }
         }
 #>
                     default:

@@ -218,13 +218,10 @@ namespace MessagePack.Formatters.TestData2
                 return null;
             }
 
-            var ____result = new global::TestData2.A();
             options.Security.DepthStep(ref reader);
             var formatterResolver = options.Resolver;
             var length = reader.ReadMapHeader();
-            var __a__ = default(int);
-            var __bs__ = default(global::System.Collections.Generic.List<global::TestData2.B>);
-            var __c__ = default(global::TestData2.C);
+            var ____result = new global::TestData2.A();
 
             for (int i = 0; i < length; i++)
             {
@@ -294,13 +291,10 @@ namespace MessagePack.Formatters.TestData2
                 return null;
             }
 
-            var ____result = new global::TestData2.B();
             options.Security.DepthStep(ref reader);
             var formatterResolver = options.Resolver;
             var length = reader.ReadMapHeader();
-            var __ass__ = default(global::System.Collections.Generic.List<global::TestData2.A>);
-            var __c__ = default(global::TestData2.C);
-            var __a__ = default(int);
+            var ____result = new global::TestData2.B();
 
             for (int i = 0; i < length; i++)
             {
@@ -366,12 +360,10 @@ namespace MessagePack.Formatters.TestData2
                 return null;
             }
 
-            var ____result = new global::TestData2.C();
             options.Security.DepthStep(ref reader);
             var formatterResolver = options.Resolver;
             var length = reader.ReadMapHeader();
-            var __b__ = default(global::TestData2.B);
-            var __a__ = default(int);
+            var ____result = new global::TestData2.C();
 
             for (int i = 0; i < length; i++)
             {
@@ -432,12 +424,10 @@ namespace MessagePack.Formatters.TestData2
                 return null;
             }
 
-            var ____result = new global::TestData2.Nest1();
             options.Security.DepthStep(ref reader);
             var formatterResolver = options.Resolver;
             var length = reader.ReadMapHeader();
-            var __EnumId__ = default(global::TestData2.Nest1.Id);
-            var __ClassId__ = default(global::TestData2.Nest1.IdType);
+            var ____result = new global::TestData2.Nest1();
 
             for (int i = 0; i < length; i++)
             {
@@ -488,10 +478,8 @@ namespace MessagePack.Formatters.TestData2
                 return null;
             }
 
-            var ____result = new global::TestData2.Nest1.IdType();
             reader.Skip();
-            ____result = new global::TestData2.Nest1.IdType();
-            ____result = new global::TestData2.Nest1.IdType();
+            var ____result = new global::TestData2.Nest1.IdType();
             return ____result;
         }
     }
@@ -526,12 +514,10 @@ namespace MessagePack.Formatters.TestData2
                 return null;
             }
 
-            var ____result = new global::TestData2.Nest2();
             options.Security.DepthStep(ref reader);
             var formatterResolver = options.Resolver;
             var length = reader.ReadMapHeader();
-            var __EnumId__ = default(global::TestData2.Nest2.Id);
-            var __ClassId__ = default(global::TestData2.Nest2.IdType);
+            var ____result = new global::TestData2.Nest2();
 
             for (int i = 0; i < length; i++)
             {
@@ -582,10 +568,8 @@ namespace MessagePack.Formatters.TestData2
                 return null;
             }
 
-            var ____result = new global::TestData2.Nest2.IdType();
             reader.Skip();
-            ____result = new global::TestData2.Nest2.IdType();
-            ____result = new global::TestData2.Nest2.IdType();
+            var ____result = new global::TestData2.Nest2.IdType();
             return ____result;
         }
     }
@@ -620,12 +604,10 @@ namespace MessagePack.Formatters.TestData2
                 return null;
             }
 
-            var ____result = new global::TestData2.PropNameCheck1();
             options.Security.DepthStep(ref reader);
             var formatterResolver = options.Resolver;
             var length = reader.ReadMapHeader();
-            var __MyProperty1__ = default(string);
-            var __MyProperty2__ = default(string);
+            var ____result = new global::TestData2.PropNameCheck1();
 
             for (int i = 0; i < length; i++)
             {
@@ -692,12 +674,10 @@ namespace MessagePack.Formatters.TestData2
                 return null;
             }
 
-            var ____result = new global::TestData2.PropNameCheck2();
             options.Security.DepthStep(ref reader);
             var formatterResolver = options.Resolver;
             var length = reader.ReadMapHeader();
-            var __MyProperty1__ = default(string);
-            var __MyProperty2__ = default(string);
+            var ____result = new global::TestData2.PropNameCheck2();
 
             for (int i = 0; i < length; i++)
             {

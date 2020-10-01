@@ -933,9 +933,9 @@ namespace MessagePack.Formatters.Abcdefg.Efcdigjl.Ateatatea.Hgfagfafgad
                 return null;
             }
 
-            var ____result = new global::Abcdefg.Efcdigjl.Ateatatea.Hgfagfafgad.TnonodsfarnoiuAtatqaga();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::Abcdefg.Efcdigjl.Ateatatea.Hgfagfafgad.TnonodsfarnoiuAtatqaga();
 
             for (int i = 0; i < length; i++)
             {
@@ -1018,10 +1018,10 @@ namespace MessagePack.Formatters
                 return null;
             }
 
-            var ____result = new global::ArrayTestTest();
             var formatterResolver = options.Resolver;
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::ArrayTestTest();
 
             for (int i = 0; i < length; i++)
             {
@@ -1081,9 +1081,9 @@ namespace MessagePack.Formatters
                 return null;
             }
 
-            var ____result = new global::GlobalMan();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::GlobalMan();
 
             for (int i = 0; i < length; i++)
             {
@@ -1129,10 +1129,10 @@ namespace MessagePack.Formatters
                 return null;
             }
 
-            var ____result = new global::Message();
             var formatterResolver = options.Resolver;
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::Message();
 
             for (int i = 0; i < length; i++)
             {
@@ -1185,10 +1185,10 @@ namespace MessagePack.Formatters
                 return null;
             }
 
-            var ____result = new global::QuestMessageBody();
             var formatterResolver = options.Resolver;
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::QuestMessageBody();
 
             for (int i = 0; i < length; i++)
             {
@@ -1233,9 +1233,9 @@ namespace MessagePack.Formatters
                 return null;
             }
 
-            var ____result = new global::StampMessageBody();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::StampMessageBody();
 
             for (int i = 0; i < length; i++)
             {
@@ -1278,10 +1278,10 @@ namespace MessagePack.Formatters
                 return null;
             }
 
-            var ____result = new global::TextMessageBody();
             var formatterResolver = options.Resolver;
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::TextMessageBody();
 
             for (int i = 0; i < length; i++)
             {
@@ -1381,16 +1381,10 @@ namespace MessagePack.Formatters
                 return null;
             }
 
-            var ____result = new global::ComplexModel();
             options.Security.DepthStep(ref reader);
             var formatterResolver = options.Resolver;
             var length = reader.ReadMapHeader();
-            var __AdditionalProperty__ = default(global::System.Collections.Generic.IDictionary<string, string>);
-            var __CreatedOn__ = default(global::System.DateTimeOffset);
-            var __Id__ = default(global::System.Guid);
-            var __Name__ = default(string);
-            var __UpdatedOn__ = default(global::System.DateTimeOffset);
-            var __SimpleModels__ = default(global::System.Collections.Generic.IList<global::SimpleModel>);
+            var ____result = new global::ComplexModel();
 
             for (int i = 0; i < length; i++)
             {
@@ -1401,11 +1395,6 @@ namespace MessagePack.Formatters
                     FAIL:
                       reader.Skip();
                       continue;
-                    case 18:
-                        if (!global::System.MemoryExtensions.SequenceEqual(stringKey, GetSpan_AdditionalProperty().Slice(1))) { goto FAIL; }
-
-                        ____result.AdditionalProperty = formatterResolver.GetFormatterWithVerify<global::System.Collections.Generic.IDictionary<string, string>>().Deserialize(ref reader, options);
-                        continue;
                     case 9:
                         switch (global::MessagePack.Internal.AutomataKeyGen.GetKey(ref stringKey))
                         {
@@ -1432,11 +1421,6 @@ namespace MessagePack.Formatters
                         if (global::MessagePack.Internal.AutomataKeyGen.GetKey(ref stringKey) != 1701667150UL) { goto FAIL; }
 
                         ____result.Name = formatterResolver.GetFormatterWithVerify<string>().Deserialize(ref reader, options);
-                        continue;
-                    case 12:
-                        if (!global::System.MemoryExtensions.SequenceEqual(stringKey, GetSpan_SimpleModels().Slice(1))) { goto FAIL; }
-
-                        ____result.SimpleModels = formatterResolver.GetFormatterWithVerify<global::System.Collections.Generic.IList<global::SimpleModel>>().Deserialize(ref reader, options);
                         continue;
 
                 }
@@ -1493,16 +1477,10 @@ namespace MessagePack.Formatters
                 return null;
             }
 
-            var ____result = new global::SimpleModel();
             options.Security.DepthStep(ref reader);
             var formatterResolver = options.Resolver;
             var length = reader.ReadMapHeader();
-            var __Id__ = default(int);
-            var __Name__ = default(string);
-            var __CreatedOn__ = default(global::System.DateTime);
-            var __Precision__ = default(int);
-            var __Money__ = default(decimal);
-            var __Amount__ = default(long);
+            var ____result = new global::SimpleModel();
 
             for (int i = 0; i < length; i++)
             {
@@ -1544,11 +1522,6 @@ namespace MessagePack.Formatters
                         if (global::MessagePack.Internal.AutomataKeyGen.GetKey(ref stringKey) != 521392779085UL) { goto FAIL; }
 
                         ____result.Money = formatterResolver.GetFormatterWithVerify<decimal>().Deserialize(ref reader, options);
-                        continue;
-                    case 6:
-                        if (global::MessagePack.Internal.AutomataKeyGen.GetKey(ref stringKey) != 128017765461313UL) { goto FAIL; }
-
-                        ____result.Amount = reader.ReadInt64();
                         continue;
 
                 }
@@ -1638,18 +1611,9 @@ namespace MessagePack.Formatters.PerfBenchmarkDotNet
                 return null;
             }
 
-            var ____result = new global::PerfBenchmarkDotNet.StringKeySerializerTarget();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadMapHeader();
-            var __MyProperty1__ = default(int);
-            var __MyProperty2__ = default(int);
-            var __MyProperty3__ = default(int);
-            var __MyProperty4__ = default(int);
-            var __MyProperty5__ = default(int);
-            var __MyProperty6__ = default(int);
-            var __MyProperty7__ = default(int);
-            var __MyProperty8__ = default(int);
-            var __MyProperty9__ = default(int);
+            var ____result = new global::PerfBenchmarkDotNet.StringKeySerializerTarget();
 
             for (int i = 0; i < length; i++)
             {
@@ -1766,9 +1730,9 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.ArrayOptimizeClass();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.ArrayOptimizeClass();
 
             for (int i = 0; i < length; i++)
             {
@@ -1856,10 +1820,10 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.BarClass();
             var formatterResolver = options.Resolver;
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.BarClass();
 
             for (int i = 0; i < length; i++)
             {
@@ -2156,10 +2120,10 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.FirstSimpleData();
             var formatterResolver = options.Resolver;
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.FirstSimpleData();
 
             for (int i = 0; i < length; i++)
             {
@@ -2207,9 +2171,9 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.FooClass();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.FooClass();
 
             for (int i = 0; i < length; i++)
             {
@@ -2253,10 +2217,10 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.GenericClass<T1, T2>();
             var formatterResolver = options.Resolver;
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.GenericClass<T1, T2>();
 
             for (int i = 0; i < length; i++)
             {
@@ -2297,10 +2261,10 @@ namespace MessagePack.Formatters.SharedData
                 throw new global::System.InvalidOperationException("typecode is null, struct not supported");
             }
 
-            var ____result = new global::SharedData.GenericStruct<T1, T2>();
             var formatterResolver = options.Resolver;
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.GenericStruct<T1, T2>();
 
             for (int i = 0; i < length; i++)
             {
@@ -2347,10 +2311,10 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.HolderV0();
             var formatterResolver = options.Resolver;
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.HolderV0();
 
             for (int i = 0; i < length; i++)
             {
@@ -2397,10 +2361,10 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.HolderV1();
             var formatterResolver = options.Resolver;
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.HolderV1();
 
             for (int i = 0; i < length; i++)
             {
@@ -2447,10 +2411,10 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.HolderV2();
             var formatterResolver = options.Resolver;
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.HolderV2();
 
             for (int i = 0; i < length; i++)
             {
@@ -2497,9 +2461,9 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.MyClass();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.MyClass();
 
             for (int i = 0; i < length; i++)
             {
@@ -2550,9 +2514,9 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.MySubUnion1();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.MySubUnion1();
 
             for (int i = 0; i < length; i++)
             {
@@ -2593,9 +2557,9 @@ namespace MessagePack.Formatters.SharedData
                 throw new global::System.InvalidOperationException("typecode is null, struct not supported");
             }
 
-            var ____result = new global::SharedData.MySubUnion2();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.MySubUnion2();
 
             for (int i = 0; i < length; i++)
             {
@@ -2639,9 +2603,9 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.MySubUnion3();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.MySubUnion3();
 
             for (int i = 0; i < length; i++)
             {
@@ -2684,9 +2648,9 @@ namespace MessagePack.Formatters.SharedData
                 throw new global::System.InvalidOperationException("typecode is null, struct not supported");
             }
 
-            var ____result = new global::SharedData.MySubUnion4();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.MySubUnion4();
 
             for (int i = 0; i < length; i++)
             {
@@ -2728,9 +2692,9 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.NestParent.NestContract();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.NestParent.NestContract();
 
             for (int i = 0; i < length; i++)
             {
@@ -2772,9 +2736,9 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.NonEmpty1();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.NonEmpty1();
 
             for (int i = 0; i < length; i++)
             {
@@ -2823,10 +2787,10 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.SimpleIntKeyData();
             var formatterResolver = options.Resolver;
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.SimpleIntKeyData();
 
             for (int i = 0; i < length; i++)
             {
@@ -2882,9 +2846,9 @@ namespace MessagePack.Formatters.SharedData
                 throw new global::System.InvalidOperationException("typecode is null, struct not supported");
             }
 
-            var ____result = new global::SharedData.SimpleStructIntKeyData();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.SimpleStructIntKeyData();
 
             for (int i = 0; i < length; i++)
             {
@@ -2933,9 +2897,9 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.SubUnionType1();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.SubUnionType1();
 
             for (int i = 0; i < length; i++)
             {
@@ -2981,9 +2945,9 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.SubUnionType2();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.SubUnionType2();
 
             for (int i = 0; i < length; i++)
             {
@@ -3030,9 +2994,9 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.UnVersionBlockTest();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.UnVersionBlockTest();
 
             for (int i = 0; i < length; i++)
             {
@@ -3222,9 +3186,9 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.Version0();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.Version0();
 
             for (int i = 0; i < length; i++)
             {
@@ -3271,9 +3235,9 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.Version1();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.Version1();
 
             for (int i = 0; i < length; i++)
             {
@@ -3328,9 +3292,9 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.Version2();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.Version2();
 
             for (int i = 0; i < length; i++)
             {
@@ -3384,10 +3348,10 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.VersionBlockTest();
             var formatterResolver = options.Resolver;
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.VersionBlockTest();
 
             for (int i = 0; i < length; i++)
             {
@@ -3442,9 +3406,9 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.VersioningUnion();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.VersioningUnion();
 
             for (int i = 0; i < length; i++)
             {
@@ -3488,10 +3452,10 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.WithIndexer();
             var formatterResolver = options.Resolver;
             options.Security.DepthStep(ref reader);
             var length = reader.ReadArrayHeader();
+            var ____result = new global::SharedData.WithIndexer();
 
             for (int i = 0; i < length; i++)
             {
@@ -3669,10 +3633,8 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.Empty2();
             reader.Skip();
-            ____result = new global::SharedData.Empty2();
-            ____result = new global::SharedData.Empty2();
+            var ____result = new global::SharedData.Empty2();
             return ____result;
         }
     }
@@ -3702,10 +3664,9 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.NonEmpty2();
             options.Security.DepthStep(ref reader);
             var length = reader.ReadMapHeader();
-            var __MyProperty__ = default(int);
+            var ____result = new global::SharedData.NonEmpty2();
 
             for (int i = 0; i < length; i++)
             {
@@ -3764,13 +3725,10 @@ namespace MessagePack.Formatters.SharedData
                 return null;
             }
 
-            var ____result = new global::SharedData.SimpleStringKeyData();
             options.Security.DepthStep(ref reader);
             var formatterResolver = options.Resolver;
             var length = reader.ReadMapHeader();
-            var __Prop1__ = default(int);
-            var __Prop2__ = default(global::SharedData.ByteEnum);
-            var __Prop3__ = default(int);
+            var ____result = new global::SharedData.SimpleStringKeyData();
 
             for (int i = 0; i < length; i++)
             {
@@ -3828,12 +3786,10 @@ namespace MessagePack.Formatters.SharedData
                 throw new global::System.InvalidOperationException("typecode is null, struct not supported");
             }
 
-            var ____result = new global::SharedData.SimpleStructStringKeyData();
             options.Security.DepthStep(ref reader);
             var formatterResolver = options.Resolver;
             var length = reader.ReadMapHeader();
-            var __X__ = default(int);
-            var __Y__ = default(int[]);
+            var ____result = new global::SharedData.SimpleStructStringKeyData();
 
             for (int i = 0; i < length; i++)
             {

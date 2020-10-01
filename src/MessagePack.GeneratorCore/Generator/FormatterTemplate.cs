@@ -166,16 +166,6 @@ foreach (var objInfo in ObjectSerializationInfos)
 
             this.Write("            }\r\n\r\n");
 
-    bool canOverwriteMember = objInfo.ConstructorParameters.Length == 0;
-    if (canOverwriteMember)
-    {
-
-            this.Write("            var ____result = new ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
-            this.Write("();\r\n");
-
-    }
-
     if (isFormatterResolverNecessary)
     {
 
@@ -183,10 +173,13 @@ foreach (var objInfo in ObjectSerializationInfos)
 
     }
 
+    bool canOverwriteMember = objInfo.ConstructorParameters.Length == 0;
     if (objInfo.Members.Length == 0)
     {
 
-            this.Write("            reader.Skip();\r\n");
+            this.Write("            var ____result = new ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
+            this.Write("();\r\n            reader.Skip();\r\n");
 
     }
     else
@@ -195,7 +188,15 @@ foreach (var objInfo in ObjectSerializationInfos)
             this.Write("            options.Security.DepthStep(ref reader);\r\n            var length = rea" +
                     "der.ReadArrayHeader();\r\n");
 
-        if (!canOverwriteMember)
+        if (canOverwriteMember)
+        {
+
+            this.Write("            var ____result = new ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
+            this.Write("();\r\n");
+
+        }
+        else
         {
             foreach (var member in objInfo.Members)
             {
@@ -214,34 +215,33 @@ foreach (var objInfo in ObjectSerializationInfos)
 
         foreach (var member in objInfo.Members)
         {
+            if (canOverwriteMember)
+            {
+                if (member.IsWritable)
+                {
 
             this.Write("                    case ");
             this.Write(this.ToStringHelper.ToStringWithCulture(member.IntKey));
-            this.Write(":\r\n");
-
-            if (canOverwriteMember)
-            {
-
-            this.Write("                        ____result.");
+            this.Write(":\r\n                        ____result.");
             this.Write(this.ToStringHelper.ToStringWithCulture(member.Name));
             this.Write(" = ");
             this.Write(this.ToStringHelper.ToStringWithCulture(member.GetDeserializeMethodString()));
-            this.Write(";\r\n");
+            this.Write(";\r\n                        break;\r\n");
 
+                }
             }
             else
             {
 
-            this.Write("                        __");
+            this.Write("                    case ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(member.IntKey));
+            this.Write(":\r\n                        __");
             this.Write(this.ToStringHelper.ToStringWithCulture(member.Name));
             this.Write("__ = ");
             this.Write(this.ToStringHelper.ToStringWithCulture(member.GetDeserializeMethodString()));
-            this.Write(";\r\n");
+            this.Write(";\r\n                        break;\r\n");
 
             }
-
-            this.Write("                        break;\r\n");
-
         }
 
             this.Write("                    default:\r\n                        reader.Skip();\r\n           " +

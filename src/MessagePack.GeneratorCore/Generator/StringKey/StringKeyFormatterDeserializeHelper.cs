@@ -12,7 +12,7 @@ namespace MessagePackCompiler.Generator
 {
     internal static class StringKeyFormatterDeserializeHelper
     {
-        public static string Classify(MemberSerializationInfo[] memberArray, string indent, bool doesAssignMemberDirectly = false)
+        public static string Classify(MemberSerializationInfo[] memberArray, string indent, bool doesAssignMemberDirectly)
         {
             var buffer = new StringBuilder();
             foreach (var memberInfoTuples in memberArray.Select(member => new MemberInfoTuple(member)).GroupBy(member => member.Binary.Length))

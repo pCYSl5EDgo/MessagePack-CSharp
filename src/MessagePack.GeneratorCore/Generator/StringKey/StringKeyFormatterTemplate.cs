@@ -224,20 +224,20 @@ foreach (var objInfo in ObjectSerializationInfos)
 ");
 
     }
-    else if (canOverwriteMember)
-    {
-
-            this.Write("            var ____result = new ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
-            this.Write("();\r\n");
-
-    }
 
     if (objInfo.Members.Length == 0)
     {
 
             this.Write("            reader.Skip();\r\n");
 
+        if (!objInfo.IsReferenceTracker)
+        {
+
+            this.Write("            var ____result = new ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
+            this.Write("();\r\n");
+
+        }
     }
     else
     {
@@ -253,8 +253,18 @@ foreach (var objInfo in ObjectSerializationInfos)
 
             this.Write("            var length = reader.ReadMapHeader();\r\n");
 
-        foreach (var memberInfo in objInfo.Members)
+        if (canOverwriteMember)
         {
+
+            this.Write("            var ____result = new ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
+            this.Write("();\r\n");
+
+        }
+        else
+        {
+            foreach (var memberInfo in objInfo.Members)
+            {
 
             this.Write("            var __");
             this.Write(this.ToStringHelper.ToStringWithCulture(memberInfo.Name));
@@ -262,6 +272,7 @@ foreach (var objInfo in ObjectSerializationInfos)
             this.Write(this.ToStringHelper.ToStringWithCulture(memberInfo.Type));
             this.Write(");\r\n");
 
+            }
         }
 
             this.Write(@"
@@ -275,7 +286,7 @@ foreach (var objInfo in ObjectSerializationInfos)
                       reader.Skip();
                       continue;
 ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(StringKeyFormatterDeserializeHelper.Classify(objInfo.Members, "                    ", canOverwriteMember)));
+            this.Write(this.ToStringHelper.ToStringWithCulture(StringKeyFormatterDeserializeHelper.Classify(canOverwriteMember ? objInfo.Members.Where(member => member.IsWritable).ToArray() : objInfo.Members, "                    ", canOverwriteMember)));
             this.Write("\r\n                }\r\n            }\r\n\r\n");
 
         if (!canOverwriteMember)
@@ -284,7 +295,6 @@ foreach (var objInfo in ObjectSerializationInfos)
             this.Write("            var ____result = new ");
             this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.GetConstructorString()));
             this.Write(";\r\n");
-
 
             foreach (var member in objInfo.Members.Where(x => x.IsWritable))
             {

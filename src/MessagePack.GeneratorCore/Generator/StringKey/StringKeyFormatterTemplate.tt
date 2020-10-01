@@ -185,18 +185,18 @@ foreach (var objInfo in ObjectSerializationInfos)
             }
 <#
     }
-    else if (canOverwriteMember)
-    {
-#>
-            var ____result = new <#= objInfo.FullName #>();
-<#
-    }
 
     if (objInfo.Members.Length == 0)
     {
 #>
             reader.Skip();
 <#
+        if (!objInfo.IsReferenceTracker)
+        {
+#>
+            var ____result = new <#= objInfo.FullName #>();
+<#
+        }
     }
     else
     {
@@ -212,11 +212,20 @@ foreach (var objInfo in ObjectSerializationInfos)
 #>
             var length = reader.ReadMapHeader();
 <#
-        foreach (var memberInfo in objInfo.Members)
+        if (canOverwriteMember)
         {
+#>
+            var ____result = new <#= objInfo.FullName #>();
+<#
+        }
+        else
+        {
+            foreach (var memberInfo in objInfo.Members)
+            {
 #>
             var __<#= memberInfo.Name #>__ = default(<#= memberInfo.Type #>);
 <#
+            }
         }
 #>
 
@@ -229,7 +238,7 @@ foreach (var objInfo in ObjectSerializationInfos)
                     FAIL:
                       reader.Skip();
                       continue;
-<#= StringKeyFormatterDeserializeHelper.Classify(objInfo.Members, "                    ", canOverwriteMember) #>
+<#= StringKeyFormatterDeserializeHelper.Classify(canOverwriteMember ? objInfo.Members.Where(member => member.IsWritable).ToArray() : objInfo.Members, "                    ", canOverwriteMember) #>
                 }
             }
 
@@ -239,7 +248,6 @@ foreach (var objInfo in ObjectSerializationInfos)
 #>
             var ____result = new <#= objInfo.GetConstructorString() #>;
 <#
-
             foreach (var member in objInfo.Members.Where(x => x.IsWritable))
             {
 #>
