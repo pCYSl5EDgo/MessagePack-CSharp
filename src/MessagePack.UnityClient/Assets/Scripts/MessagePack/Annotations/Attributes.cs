@@ -12,12 +12,9 @@ namespace MessagePack
     {
         public bool KeyAsPropertyName { get; private set; }
 
-        public bool TrackReference { get; private set; }
-
-        public MessagePackObjectAttribute(bool keyAsPropertyName = false, bool trackReference = false)
+        public MessagePackObjectAttribute(bool keyAsPropertyName = false)
         {
             this.KeyAsPropertyName = keyAsPropertyName;
-            this.TrackReference = trackReference;
         }
     }
 
@@ -101,6 +98,14 @@ namespace MessagePack
         {
             this.FormatterType = formatterType;
             this.Arguments = arguments;
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+    public class ReferenceTrackerAttribute : Attribute
+    {
+        public ReferenceTrackerAttribute()
+        {
         }
     }
 }

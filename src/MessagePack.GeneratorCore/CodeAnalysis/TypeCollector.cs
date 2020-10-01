@@ -33,6 +33,7 @@ namespace MessagePackCompiler.CodeAnalysis
         internal readonly INamedTypeSymbol IgnoreDataMemberAttribute;
         internal readonly INamedTypeSymbol IMessagePackSerializationCallbackReceiver;
         internal readonly INamedTypeSymbol MessagePackFormatterAttribute;
+        internal readonly INamedTypeSymbol ReferenceTrackerAttribute;
 #pragma warning restore SA1401 // Fields should be private
 
         public ReferenceSymbols(Compilation compilation, Action<string> logger)
@@ -95,6 +96,12 @@ namespace MessagePackCompiler.CodeAnalysis
             if (MessagePackFormatterAttribute == null)
             {
                 throw new InvalidOperationException("failed to get metadata of MessagePack.MessagePackFormatterAttribute");
+            }
+
+            ReferenceTrackerAttribute = compilation.GetTypeByMetadataName("MessagePack.ReferenceTrackerAttribute");
+            if (ReferenceTrackerAttribute == null)
+            {
+                throw new InvalidOperationException("failed to get metadata of MessagePack.ReferenceTrackerAttribute");
             }
         }
     }
@@ -1013,9 +1020,10 @@ namespace MessagePackCompiler.CodeAnalysis
                 }
             }
 
+            var referenceTrackerContractAttr = type.GetAttributes().FirstOrDefault(x => x.AttributeClass.ApproximatelyEqual(this.typeReferences.ReferenceTrackerAttribute));
+            var shouldTrack = !(referenceTrackerContractAttr is null);
             var constructorParameterArray = constructorParameters.ToArray();
             var canTrack = isClass & constructorParameterArray.Length == 0;
-            var shouldTrack = contractAttr.ConstructorArguments.Length >= 2 && (bool)contractAttr.ConstructorArguments[1].Value;
             if (!canTrack && shouldTrack)
             {
                 throw new MessagePackGeneratorResolveFailedException("No zero-parameter constructor. type:" + type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
