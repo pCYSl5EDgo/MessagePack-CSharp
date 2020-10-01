@@ -202,15 +202,6 @@ foreach (var objInfo in ObjectSerializationInfos)
             this.Write("            }\r\n\r\n");
 
     bool canOverwriteMember = objInfo.ConstructorParameters.Length == 0;
-    if (canOverwriteMember)
-    {
-
-            this.Write("            var ____result = new ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
-            this.Write("();\r\n");
-
-    }
-
     if (objInfo.IsReferenceTracker)
     {
 
@@ -222,7 +213,7 @@ foreach (var objInfo in ObjectSerializationInfos)
                     " {\r\n                return (");
             this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
             this.Write(")cache.Span[(int)reader.ReadUInt32()];\r\n            }\r\n\r\n            var index = " +
-                    "(int)reader.ReadUInt32();\r\n            ____result = new ");
+                    "(int)reader.ReadUInt32();\r\n            var ____result = new ");
             this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
             this.Write(@"();
             var addedIndex = cache.Add(____result);
@@ -233,22 +224,20 @@ foreach (var objInfo in ObjectSerializationInfos)
 ");
 
     }
+    else if (canOverwriteMember)
+    {
+
+            this.Write("            var ____result = new ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
+            this.Write("();\r\n");
+
+    }
 
     if (objInfo.Members.Length == 0)
     {
 
-            this.Write("            reader.Skip();\r\n            ____result = new ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.GetConstructorString()));
-            this.Write(";\r\n");
+            this.Write("            reader.Skip();\r\n");
 
-        if (!objInfo.IsReferenceTracker)
-        {
-
-            this.Write("            ____result = new ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.GetConstructorString()));
-            this.Write(";\r\n");
-
-        }
     }
     else
     {

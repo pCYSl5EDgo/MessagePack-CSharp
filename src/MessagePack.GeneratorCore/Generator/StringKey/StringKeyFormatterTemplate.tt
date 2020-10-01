@@ -161,13 +161,6 @@ foreach (var objInfo in ObjectSerializationInfos)
 
 <#
     bool canOverwriteMember = objInfo.ConstructorParameters.Length == 0;
-    if (canOverwriteMember)
-    {
-#>
-            var ____result = new <#= objInfo.FullName #>();
-<#
-    }
-
     if (objInfo.IsReferenceTracker)
     {
 #>
@@ -184,7 +177,7 @@ foreach (var objInfo in ObjectSerializationInfos)
             }
 
             var index = (int)reader.ReadUInt32();
-            ____result = new <#= objInfo.FullName #>();
+            var ____result = new <#= objInfo.FullName #>();
             var addedIndex = cache.Add(____result);
             if (index != addedIndex)
             {
@@ -192,19 +185,18 @@ foreach (var objInfo in ObjectSerializationInfos)
             }
 <#
     }
+    else if (canOverwriteMember)
+    {
+#>
+            var ____result = new <#= objInfo.FullName #>();
+<#
+    }
 
     if (objInfo.Members.Length == 0)
     {
 #>
             reader.Skip();
-            ____result = new <#= objInfo.GetConstructorString() #>;
 <#
-        if (!objInfo.IsReferenceTracker)
-        {
-#>
-            ____result = new <#= objInfo.GetConstructorString() #>;
-<#
-        }
     }
     else
     {
