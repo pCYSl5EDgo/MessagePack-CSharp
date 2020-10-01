@@ -278,7 +278,7 @@ foreach (var objInfo in ObjectSerializationInfos)
                       reader.Skip();
                       continue;
 ");
-            this.Write(this.ToStringHelper.ToStringWithCulture(StringKeyFormatterDeserializeHelper.Classify(objInfo.Members, "                    ")));
+            this.Write(this.ToStringHelper.ToStringWithCulture(StringKeyFormatterDeserializeHelper.Classify(objInfo.Members, "                    ", objInfo.IsReferenceTracker)));
             this.Write("\r\n                }\r\n            }\r\n\r\n");
 
         if (!objInfo.IsReferenceTracker)

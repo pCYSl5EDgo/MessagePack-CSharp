@@ -230,7 +230,7 @@ foreach (var objInfo in ObjectSerializationInfos)
                     FAIL:
                       reader.Skip();
                       continue;
-<#= StringKeyFormatterDeserializeHelper.Classify(objInfo.Members, "                    ") #>
+<#= StringKeyFormatterDeserializeHelper.Classify(objInfo.Members, "                    ", objInfo.IsReferenceTracker) #>
                 }
             }
 
