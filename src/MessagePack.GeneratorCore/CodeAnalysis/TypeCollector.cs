@@ -33,7 +33,7 @@ namespace MessagePackCompiler.CodeAnalysis
         internal readonly INamedTypeSymbol IgnoreDataMemberAttribute;
         internal readonly INamedTypeSymbol IMessagePackSerializationCallbackReceiver;
         internal readonly INamedTypeSymbol MessagePackFormatterAttribute;
-        internal readonly INamedTypeSymbol ReferenceTrackerAttribute;
+        internal readonly INamedTypeSymbol TrackReferenceAttribute;
 #pragma warning restore SA1401 // Fields should be private
 
         public ReferenceSymbols(Compilation compilation, Action<string> logger)
@@ -98,10 +98,10 @@ namespace MessagePackCompiler.CodeAnalysis
                 throw new InvalidOperationException("failed to get metadata of MessagePack.MessagePackFormatterAttribute");
             }
 
-            ReferenceTrackerAttribute = compilation.GetTypeByMetadataName("MessagePack.ReferenceTrackerAttribute");
-            if (ReferenceTrackerAttribute == null)
+            TrackReferenceAttribute = compilation.GetTypeByMetadataName("MessagePack.TrackReferenceAttribute");
+            if (TrackReferenceAttribute == null)
             {
-                throw new InvalidOperationException("failed to get metadata of MessagePack.ReferenceTrackerAttribute");
+                throw new InvalidOperationException("failed to get metadata of MessagePack.TrackReferenceAttribute");
             }
         }
     }
@@ -1020,8 +1020,8 @@ namespace MessagePackCompiler.CodeAnalysis
                 }
             }
 
-            var referenceTrackerContractAttr = type.GetAttributes().FirstOrDefault(x => x.AttributeClass.ApproximatelyEqual(this.typeReferences.ReferenceTrackerAttribute));
-            var shouldTrack = !(referenceTrackerContractAttr is null);
+            var trackReferenceContractAttr = type.GetAttributes().FirstOrDefault(x => x.AttributeClass.ApproximatelyEqual(this.typeReferences.TrackReferenceAttribute));
+            var shouldTrack = !(trackReferenceContractAttr is null);
             var constructorParameterArray = constructorParameters.ToArray();
             var canTrack = isClass & constructorParameterArray.Length == 0;
             if (!canTrack && shouldTrack)

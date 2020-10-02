@@ -21,7 +21,18 @@ namespace MessagePack
 
         public Span<object> Span => array.AsSpan(0, count);
 
-        public object this[uint index] => Span[(int)index];
+        public object this[uint index]
+        {
+            get
+            {
+                if (index >= count)
+                {
+                    throw new IndexOutOfRangeException("index was out of range. index: " + index + ". count: " + count);
+                }
+
+                return array[index];
+            }
+        }
 
         public int Capacity
         {

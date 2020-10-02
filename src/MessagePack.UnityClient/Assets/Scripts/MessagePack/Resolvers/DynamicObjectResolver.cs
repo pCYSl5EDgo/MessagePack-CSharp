@@ -671,7 +671,7 @@ namespace MessagePack.Internal
 
                 argValue.EmitLoad();
                 il.Emit(OpCodes.Brtrue_S, elseBody);
-                argWriter.EmitLoad();
+                argWriter.EmitLdarg();
                 il.EmitCall(MessagePackWriterTypeInfo.WriteNil);
                 il.Emit(OpCodes.Ret);
 
@@ -705,13 +705,13 @@ namespace MessagePack.Internal
             if (info.IsReferenceTracker)
             {
                 // writer.WriteMapHeader(1);
-                argWriter.EmitLoad();
+                argWriter.EmitLdarg();
                 il.EmitLdc_I4(1);
                 il.EmitCall(MessagePackWriterTypeInfo.WriteMapHeader);
 
                 // var cache = writer.Cache;
                 var localCache = il.DeclareLocal(typeof(MessagePackReferenceCache));
-                argWriter.EmitLoad();
+                argWriter.EmitLdarg();
                 il.EmitCall(MessagePackWriterTypeInfo.Cache);
                 il.EmitStloc(localCache);
 
@@ -730,11 +730,11 @@ namespace MessagePack.Internal
                 // if (index >= 0)
                 // {
                 //     writer.WriteNil();
-                argWriter.EmitLoad();
+                argWriter.EmitLdarg();
                 il.EmitCall(MessagePackWriterTypeInfo.WriteNil);
 
                 //     writer.Write((uint)index);
-                argWriter.EmitLoad();
+                argWriter.EmitLdarg();
                 il.EmitLdloc(localIndex);
                 il.EmitCall(MessagePackWriterTypeInfo.Write_UInt32);
 
@@ -744,7 +744,7 @@ namespace MessagePack.Internal
 
                 il.MarkLabel(elseBody);
                 // writer.Write((uint)cache.Add(value));
-                argWriter.EmitLoad();
+                argWriter.EmitLdarg();
                 il.EmitLdloc(localCache);
                 argValue.EmitLoad();
                 il.EmitCall(MessagePackReferenceCacheTypeInfo.Add);
@@ -758,7 +758,7 @@ namespace MessagePack.Internal
                 var intKeyMap = info.Members.Where(x => x.IsReadable).ToDictionary(x => x.IntKey);
 
                 var len = maxKey + 1;
-                argWriter.EmitLoad();
+                argWriter.EmitLdarg();
                 il.EmitLdc_I4(len);
                 il.EmitCall(MessagePackWriterTypeInfo.WriteArrayHeader);
 
@@ -773,7 +773,7 @@ namespace MessagePack.Internal
                     else
                     {
                         // Write Nil as Blanc
-                        argWriter.EmitLoad();
+                        argWriter.EmitLdarg();
                         il.EmitCall(MessagePackWriterTypeInfo.WriteNil);
                     }
                 }
@@ -783,7 +783,7 @@ namespace MessagePack.Internal
                 // use Map
                 var writeCount = info.Members.Count(x => x.IsReadable);
 
-                argWriter.EmitLoad();
+                argWriter.EmitLdarg();
                 il.EmitLdc_I4(writeCount);
                 ////if (writeCount <= MessagePackRange.MaxFixMapCount)
                 ////{
@@ -797,7 +797,7 @@ namespace MessagePack.Internal
                 var index = 0;
                 foreach (ObjectSerializationInfo.EmittableMember item in info.Members.Where(x => x.IsReadable))
                 {
-                    argWriter.EmitLoad();
+                    argWriter.EmitLdarg();
                     emitStringByteKeys();
                     il.EmitLdc_I4(index);
                     il.Emit(OpCodes.Ldelem_Ref);
@@ -839,7 +839,7 @@ namespace MessagePack.Internal
             if (emitter != null)
             {
                 emitter();
-                argWriter.EmitLoad();
+                argWriter.EmitLdarg();
                 argValue.EmitLoad();
                 member.EmitLoadValue(il);
                 argOptions.EmitLoad();
@@ -857,17 +857,17 @@ namespace MessagePack.Internal
                     il.Emit(OpCodes.Dup);
                     il.EmitStloc(memberValue);
                     il.Emit(OpCodes.Brtrue, writeNonNilValueLabel);
-                    argWriter.EmitLoad();
+                    argWriter.EmitLdarg();
                     il.EmitCall(MessagePackWriterTypeInfo.WriteNil);
                     il.Emit(OpCodes.Br, endLabel);
 
                     il.MarkLabel(writeNonNilValueLabel);
-                    argWriter.EmitLoad();
+                    argWriter.EmitLdarg();
                     il.EmitLdloc(memberValue);
                 }
                 else
                 {
-                    argWriter.EmitLoad();
+                    argWriter.EmitLdarg();
                     argValue.EmitLoad();
                     member.EmitLoadValue(il);
                 }
@@ -887,7 +887,7 @@ namespace MessagePack.Internal
                 il.EmitLdloc(localResolver);
                 il.Emit(OpCodes.Call, getFormatterWithVerify.MakeGenericMethod(t));
 
-                argWriter.EmitLoad();
+                argWriter.EmitLdarg();
                 argValue.EmitLoad();
                 member.EmitLoadValue(il);
                 argOptions.EmitLoad();
@@ -922,12 +922,6 @@ namespace MessagePack.Internal
 
             il.MarkLabel(falseLabel);
 
-            // options.Security.DepthStep(ref reader);
-            argOptions.EmitLoad();
-            il.EmitCall(getSecurityFromOptions);
-            argReader.EmitLdarg();
-            il.EmitCall(securityDepthStep);
-
             // result object
             var localResult = il.DeclareLocal(type);
             if (info.IsReferenceTracker)
@@ -935,32 +929,34 @@ namespace MessagePack.Internal
                 // if(reader.ReadMapHeader() != 1) { throw new MessagePackSerializationException(); }
                 {
                     var elseBody = il.DefineLabel();
-                    argReader.EmitLoad();
+                    argReader.EmitLdarg();
                     il.EmitCall(MessagePackReaderTypeInfo.ReadMapHeader);
                     il.EmitLdc_I4(1);
                     il.Emit(OpCodes.Beq_S, elseBody);
 
-                    il.ThrowException(typeof(MessagePackSerializationException));
+                    il.Emit(OpCodes.Ldstr, "map header count should be 1.");
+                    il.Emit(OpCodes.Newobj, messagePackSerializationExceptionMessageOnlyConstructor);
+                    il.Emit(OpCodes.Throw);
 
                     il.MarkLabel(elseBody);
                 }
 
                 // var cache = reader.Cache;
                 var localCache = il.DeclareLocal(typeof(MessagePackReferenceCache));
-                argReader.EmitLoad();
+                argReader.EmitLdarg();
                 il.EmitCall(MessagePackReaderTypeInfo.Cache);
                 il.EmitStloc(localCache);
 
                 // if (reader.TryReadNil()) { return (T)cache[reader.ReadUInt32()]; }
                 {
                     var elseBody = il.DefineLabel();
-                    argReader.EmitLoad();
+                    argReader.EmitLdarg();
                     il.EmitCall(MessagePackReaderTypeInfo.TryReadNil);
                     il.Emit(OpCodes.Brfalse_S, elseBody);
 
                     // return (T)cache[reader.ReadUInt32()];
                     il.EmitLdloc(localCache);
-                    argReader.EmitLoad();
+                    argReader.EmitLdarg();
                     il.EmitCall(MessagePackReaderTypeInfo.ReadUInt32);
                     il.EmitCall(MessagePackReferenceCacheTypeInfo.GetItem);
                     il.Emit(OpCodes.Castclass, type);
@@ -981,15 +977,23 @@ namespace MessagePack.Internal
                     il.EmitLdloc(localResult);
                     il.EmitCall(MessagePackReferenceCacheTypeInfo.Add);
 
-                    argReader.EmitLoad();
+                    argReader.EmitLdarg();
                     il.EmitCall(MessagePackReaderTypeInfo.ReadUInt32);
 
                     il.Emit(OpCodes.Beq_S, elseBody);
-                    il.ThrowException(typeof(MessagePackSerializationException));
+                    il.Emit(OpCodes.Ldstr, "reference index mismatch!");
+                    il.Emit(OpCodes.Newobj, messagePackSerializationExceptionMessageOnlyConstructor);
+                    il.Emit(OpCodes.Throw);
 
                     il.MarkLabel(elseBody);
                 }
             }
+
+            // options.Security.DepthStep(ref reader);
+            argOptions.EmitLoad();
+            il.EmitCall(getSecurityFromOptions);
+            argReader.EmitLdarg();
+            il.EmitCall(securityDepthStep);
 
             // var length = ReadMapHeader(ref byteSequence);
             LocalBuilder length = il.DeclareLocal(typeof(int)); // [loc:1]
@@ -1438,7 +1442,7 @@ namespace MessagePack.Internal
         {
             internal static readonly TypeInfo TypeInfo = typeof(MessagePackReferenceCache).GetTypeInfo();
 
-            internal static readonly MethodInfo FindIndex = typeof(MessagePackReferenceCache).GetRuntimeMethod(nameof(MessagePackReferenceCache), new[] { typeof(object) });
+            internal static readonly MethodInfo FindIndex = typeof(MessagePackReferenceCache).GetRuntimeMethod(nameof(MessagePackReferenceCache.FindIndex), new[] { typeof(object) });
             internal static readonly MethodInfo Add = typeof(MessagePackReferenceCache).GetRuntimeMethod(nameof(MessagePackReferenceCache.Add), new[] { typeof(object) });
             internal static readonly MethodInfo GetItem = typeof(MessagePackReferenceCache).GetRuntimeMethod("get_Item", new[] { typeof(uint) });
         }
@@ -2052,7 +2056,7 @@ namespace MessagePack.Internal
 
             var constructorParametersArray = constructorParameters.ToArray();
             var canTrack = constructorParametersArray.Length == 0 & isClass;
-            var shouldTrack = ti.GetCustomAttributes<ReferenceTrackerAttribute>().Any();
+            var shouldTrack = ti.GetCustomAttributes<TrackReferenceAttribute>().Any();
             if (!canTrack && shouldTrack)
             {
                 return null;

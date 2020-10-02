@@ -102,10 +102,7 @@ namespace MessagePack
     }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-    public class ReferenceTrackerAttribute : Attribute
+    public class TrackReferenceAttribute : Attribute
     {
-        public ReferenceTrackerAttribute()
-        {
-        }
     }
 }
