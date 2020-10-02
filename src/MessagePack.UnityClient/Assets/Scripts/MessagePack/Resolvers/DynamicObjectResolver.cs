@@ -90,11 +90,11 @@ namespace MessagePack.Resolvers
 
                 if (ti.IsAnonymous())
                 {
-                    Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeBuilder.BuildFormatterToDynamicMethod(typeof(T), true, true, false);
+                    Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeBuilder.BuildFormatterToDynamicMethod(typeof(T), true, true, false, false);
                     return;
                 }
 
-                TypeInfo formatterTypeInfo = DynamicObjectTypeBuilder.BuildType(DynamicAssembly.Value, typeof(T), false, false);
+                TypeInfo formatterTypeInfo = DynamicObjectTypeBuilder.BuildType(DynamicAssembly.Value, typeof(T), false, false, false);
                 if (formatterTypeInfo == null)
                 {
                     return;
@@ -150,11 +150,11 @@ namespace MessagePack.Resolvers
 
                 if (ti.IsAnonymous())
                 {
-                    Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeBuilder.BuildFormatterToDynamicMethod(typeof(T), true, true, false);
+                    Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeBuilder.BuildFormatterToDynamicMethod(typeof(T), true, true, false, false);
                 }
                 else
                 {
-                    Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeBuilder.BuildFormatterToDynamicMethod(typeof(T), false, false, true);
+                    Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeBuilder.BuildFormatterToDynamicMethod(typeof(T), false, false, true, false);
                 }
             }
         }
@@ -226,11 +226,11 @@ namespace MessagePack.Resolvers
 
                 if (ti.IsAnonymous())
                 {
-                    Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeBuilder.BuildFormatterToDynamicMethod(typeof(T), true, true, false);
+                    Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeBuilder.BuildFormatterToDynamicMethod(typeof(T), true, true, false, false);
                     return;
                 }
 
-                TypeInfo formatterTypeInfo = DynamicObjectTypeBuilder.BuildType(DynamicAssembly.Value, typeof(T), true, true);
+                TypeInfo formatterTypeInfo = DynamicObjectTypeBuilder.BuildType(DynamicAssembly.Value, typeof(T), true, true, false);
                 if (formatterTypeInfo == null)
                 {
                     return;
@@ -287,11 +287,11 @@ namespace MessagePack.Resolvers
 
                 if (ti.IsAnonymous())
                 {
-                    Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeBuilder.BuildFormatterToDynamicMethod(typeof(T), true, true, false);
+                    Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeBuilder.BuildFormatterToDynamicMethod(typeof(T), true, true, false, false);
                 }
                 else
                 {
-                    Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeBuilder.BuildFormatterToDynamicMethod(typeof(T), true, true, true);
+                    Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeBuilder.BuildFormatterToDynamicMethod(typeof(T), true, true, true, false);
                 }
             }
         }
@@ -334,14 +334,14 @@ namespace MessagePack.Internal
             { typeof(MessagePack.Nil) },
         };
 
-        public static TypeInfo BuildType(DynamicAssembly assembly, Type type, bool forceStringKey, bool contractless)
+        public static TypeInfo BuildType(DynamicAssembly assembly, Type type, bool forceStringKey, bool contractless, bool forceTrackReference)
         {
             if (ignoreTypes.Contains(type))
             {
                 return null;
             }
 
-            var serializationInfo = MessagePack.Internal.ObjectSerializationInfo.CreateOrNull(type, forceStringKey, contractless, false);
+            var serializationInfo = MessagePack.Internal.ObjectSerializationInfo.CreateOrNull(type, forceStringKey, contractless, false, forceTrackReference);
             if (serializationInfo == null)
             {
                 return null;
@@ -453,9 +453,9 @@ namespace MessagePack.Internal
             }
         }
 
-        public static object BuildFormatterToDynamicMethod(Type type, bool forceStringKey, bool contractless, bool allowPrivate)
+        public static object BuildFormatterToDynamicMethod(Type type, bool forceStringKey, bool contractless, bool allowPrivate, bool forceTrackReference)
         {
-            var serializationInfo = ObjectSerializationInfo.CreateOrNull(type, forceStringKey, contractless, allowPrivate);
+            var serializationInfo = ObjectSerializationInfo.CreateOrNull(type, forceStringKey, contractless, allowPrivate, forceTrackReference);
             if (serializationInfo == null)
             {
                 return null;
@@ -1549,7 +1549,7 @@ namespace MessagePack.Internal
         {
         }
 
-        public static ObjectSerializationInfo CreateOrNull(Type type, bool forceStringKey, bool contractless, bool allowPrivate)
+        public static ObjectSerializationInfo CreateOrNull(Type type, bool forceStringKey, bool contractless, bool allowPrivate, bool forceTrackReference)
         {
             TypeInfo ti = type.GetTypeInfo();
             var isClass = ti.IsClass || ti.IsInterface || ti.IsAbstract;
@@ -2056,7 +2056,8 @@ namespace MessagePack.Internal
 
             var constructorParametersArray = constructorParameters.ToArray();
             var canTrack = constructorParametersArray.Length == 0 & isClass;
-            var shouldTrack = ti.GetCustomAttributes<TrackReferenceAttribute>().Any();
+            var shouldTrack = ti.GetCustomAttributes<TrackReferenceAttribute>().Any() | (isClass & forceTrackReference);
+
             if (!canTrack && shouldTrack)
             {
                 return null;
