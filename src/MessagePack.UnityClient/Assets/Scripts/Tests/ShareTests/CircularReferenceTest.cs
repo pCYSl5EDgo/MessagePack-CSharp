@@ -21,7 +21,7 @@ namespace MessagePack.Tests
         [Fact]
         public void NullTestTypeless()
         {
-            var original = default(CircleExample);
+            var original = default(CircleExampleTypeless);
 
             var binary = MessagePackSerializer.Typeless.Serialize(original);
             var result = MessagePackSerializer.Typeless.Deserialize(binary);
@@ -53,10 +53,10 @@ namespace MessagePack.Tests
         [InlineData(int.MinValue)]
         public void FieldNullTestTypeless(int id)
         {
-            var original = new CircleExample() { Id = id };
+            var original = new CircleExampleTypeless() { Id = id };
 
             var binary = MessagePackSerializer.Typeless.Serialize(original);
-            var result = (CircleExample)MessagePackSerializer.Typeless.Deserialize(binary);
+            var result = (CircleExampleTypeless)MessagePackSerializer.Typeless.Deserialize(binary);
 
             result.IsNotNull();
             result.Parent.IsNull();
@@ -90,11 +90,11 @@ namespace MessagePack.Tests
         [InlineData(int.MinValue)]
         public void SelfParentTestTypeless(int id)
         {
-            var original = new CircleExample() { Id = id };
+            var original = new CircleExampleTypeless() { Id = id };
             original.Parent = original;
 
             var binary = MessagePackSerializer.Typeless.Serialize(original);
-            var result = (CircleExample)MessagePackSerializer.Typeless.Deserialize(binary);
+            var result = (CircleExampleTypeless)MessagePackSerializer.Typeless.Deserialize(binary);
 
             result.IsNotNull();
             result.Parent.IsSameReferenceAs(result);
@@ -140,9 +140,9 @@ namespace MessagePack.Tests
         [InlineData(114514, 1919, -810931)]
         public void SimpleTreeTestTypeless(int id0, int id1, int id2)
         {
-            var child0 = new CircleExample() { Id = id1 };
-            var child1 = new CircleExample() { Id = id2 };
-            var original = new CircleExample()
+            var child0 = new CircleExampleTypeless() { Id = id1 };
+            var child1 = new CircleExampleTypeless() { Id = id2 };
+            var original = new CircleExampleTypeless()
             {
                 Id = id0,
                 Child0 = child0,
@@ -152,7 +152,7 @@ namespace MessagePack.Tests
             child1.Parent = original;
 
             var binary = MessagePackSerializer.Typeless.Serialize(original);
-            var result = (CircleExample)MessagePackSerializer.Typeless.Deserialize(binary);
+            var result = (CircleExampleTypeless)MessagePackSerializer.Typeless.Deserialize(binary);
 
             Assert.NotNull(result);
             Assert.Null(result.Parent);
@@ -166,6 +166,20 @@ namespace MessagePack.Tests
         }
 
         private static int FindParentIndex(CircleExample[] array, int index)
+        {
+            var item = array[index].Parent;
+            for (var i = 0; i < array.Length; i++)
+            {
+                if (array[i] == item)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private static int FindParentIndex(CircleExampleTypeless[] array, int index)
         {
             var item = array[index].Parent;
             for (var i = 0; i < array.Length; i++)
@@ -193,7 +207,35 @@ namespace MessagePack.Tests
             return -1;
         }
 
+        private static int FindChild0Index(CircleExampleTypeless[] array, int index)
+        {
+            var item = array[index].Child0;
+            for (var i = 0; i < array.Length; i++)
+            {
+                if (array[i] == item)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
         private static int FindChild1Index(CircleExample[] array, int index)
+        {
+            var item = array[index].Child1;
+            for (var i = 0; i < array.Length; i++)
+            {
+                if (array[i] == item)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private static int FindChild1Index(CircleExampleTypeless[] array, int index)
         {
             var item = array[index].Child1;
             for (var i = 0; i < array.Length; i++)
@@ -256,10 +298,10 @@ namespace MessagePack.Tests
         [InlineData(new int[] { 0, int.MinValue, int.MaxValue, -1, 33, -4 })]
         public void ArrayTestTypeless(int[] array)
         {
-            var original = new CircleExample[array.Length];
+            var original = new CircleExampleTypeless[array.Length];
             for (var i = 0; i < original.Length; i++)
             {
-                original[i] = new CircleExample
+                original[i] = new CircleExampleTypeless
                 {
                     Id = array[i],
                 };
@@ -280,7 +322,7 @@ namespace MessagePack.Tests
             }
 
             var binary = MessagePackSerializer.Typeless.Serialize(original);
-            var result = (CircleExample[])MessagePackSerializer.Typeless.Deserialize(binary);
+            var result = (CircleExampleTypeless[])MessagePackSerializer.Typeless.Deserialize(binary);
 
             Assert.NotNull(result);
             Assert.Equal(array.Length, result.Length);
@@ -310,7 +352,7 @@ namespace MessagePack.Tests
         [Fact]
         public void NullTest0Typeless()
         {
-            var original = default(TwinExample0);
+            var original = default(TwinExample0Typeless);
 
             var binary = MessagePackSerializer.Typeless.Serialize(original);
             var result = MessagePackSerializer.Typeless.Deserialize(binary);
@@ -332,7 +374,7 @@ namespace MessagePack.Tests
         [Fact]
         public void NullTest1Typeless()
         {
-            var original = default(TwinExample1);
+            var original = default(TwinExample1Typeless);
 
             var binary = MessagePackSerializer.Typeless.Serialize(original);
             var result = MessagePackSerializer.Typeless.Deserialize(binary);
@@ -360,10 +402,10 @@ namespace MessagePack.Tests
         [InlineData("名無しの権兵衛")]
         public void FieldNullTest0Typeless(string name)
         {
-            var original = new TwinExample0() { Name = name };
+            var original = new TwinExample0Typeless() { Name = name };
 
             var binary = MessagePackSerializer.Typeless.Serialize(original);
-            var result = (TwinExample0)MessagePackSerializer.Typeless.Deserialize(binary);
+            var result = (TwinExample0Typeless)MessagePackSerializer.Typeless.Deserialize(binary);
 
             Assert.NotNull(result);
             Assert.Null(result.Partner);
@@ -390,10 +432,10 @@ namespace MessagePack.Tests
         [InlineData("名無しの権兵衛")]
         public void FieldNullTest1Typeless(string name)
         {
-            var original = new TwinExample1() { Name = name };
+            var original = new TwinExample1Typeless() { Name = name };
 
             var binary = MessagePackSerializer.Typeless.Serialize(original);
-            var result = (TwinExample1)MessagePackSerializer.Typeless.Deserialize(binary);
+            var result = (TwinExample1Typeless)MessagePackSerializer.Typeless.Deserialize(binary);
 
             Assert.NotNull(result);
             Assert.Null(result.Partner);
@@ -428,8 +470,8 @@ namespace MessagePack.Tests
         [InlineData("名無しの権兵衛", "じゅげむじゅげむごこうのすりきれ")]
         public void MirrorTestTypeless(string name0, string name1)
         {
-            var original1 = new TwinExample1() { Name = name0 };
-            var original0 = new TwinExample0()
+            var original1 = new TwinExample1Typeless() { Name = name0 };
+            var original0 = new TwinExample0Typeless()
             {
                 Name = name1,
                 Partner = original1,
@@ -437,7 +479,7 @@ namespace MessagePack.Tests
             original1.Partner = original0;
 
             var binary = MessagePackSerializer.Typeless.Serialize(original1);
-            var result = (TwinExample1)MessagePackSerializer.Typeless.Deserialize(binary);
+            var result = (TwinExample1Typeless)MessagePackSerializer.Typeless.Deserialize(binary);
 
             Assert.NotNull(result);
             Assert.NotNull(result.Partner);
@@ -551,6 +593,26 @@ namespace MessagePack.Tests
         public int Id { get; set; }
     }
 
+    public sealed class CircleExampleTypeless
+    {
+#if CSHARP_8_OR_NEWER || NETCOREAPP3_1
+        public CircleExampleTypeless? Parent { get; set; }
+
+        public CircleExampleTypeless? Child0 { get; set; }
+
+        public CircleExampleTypeless? Child1 { get; set; }
+#else
+        public CircleExampleTypeless Parent { get; set; }
+
+        public CircleExampleTypeless Child0 { get; set; }
+
+        public CircleExampleTypeless Child1 { get; set; }
+#endif
+
+        [Key(3)]
+        public int Id { get; set; }
+    }
+
     [MessagePackObject, TrackReference]
     public class TwinExample0
     {
@@ -569,6 +631,19 @@ namespace MessagePack.Tests
 #endif
     }
 
+    public class TwinExample0Typeless
+    {
+#if CSHARP_8_OR_NEWER || NETCOREAPP3_1
+        public string? Name { get; set; }
+
+        public TwinExample1Typeless? Partner { get; set; }
+#else
+        public string Name { get; set; }
+
+        public TwinExample1Typeless Partner { get; set; }
+#endif
+    }
+
     [MessagePackObject, TrackReference]
     public class TwinExample1
     {
@@ -584,6 +659,19 @@ namespace MessagePack.Tests
 
         [Key(1)]
         public TwinExample0 Partner { get; set; }
+#endif
+    }
+
+    public class TwinExample1Typeless
+    {
+#if CSHARP_8_OR_NEWER || NETCOREAPP3_1
+        public string? Name { get; set; }
+
+        public TwinExample0Typeless? Partner { get; set; }
+#else
+        public string Name { get; set; }
+
+        public TwinExample0Typeless Partner { get; set; }
 #endif
     }
 }
