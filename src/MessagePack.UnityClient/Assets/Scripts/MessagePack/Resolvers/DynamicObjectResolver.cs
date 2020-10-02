@@ -736,7 +736,7 @@ namespace MessagePack.Internal
                 //     writer.Write((uint)index);
                 argWriter.EmitLdarg();
                 il.EmitLdloc(localIndex);
-                il.EmitCall(MessagePackWriterTypeInfo.Write_UInt32);
+                il.EmitCall(MessagePackWriterTypeInfo.WriteUInt32);
 
                 //     return;
                 // }
@@ -748,7 +748,7 @@ namespace MessagePack.Internal
                 il.EmitLdloc(localCache);
                 argValue.EmitLoad();
                 il.EmitCall(MessagePackReferenceCacheTypeInfo.Add);
-                il.EmitCall(MessagePackWriterTypeInfo.Write_UInt32);
+                il.EmitCall(MessagePackWriterTypeInfo.WriteUInt32);
             }
 
             if (info.IsIntKey)
@@ -1420,7 +1420,7 @@ namespace MessagePack.Internal
             internal static readonly MethodInfo WriteArrayHeader = typeof(MessagePackWriter).GetRuntimeMethod(nameof(MessagePackWriter.WriteArrayHeader), new[] { typeof(int) });
             internal static readonly MethodInfo WriteBytes = typeof(MessagePackWriter).GetRuntimeMethod(nameof(MessagePackWriter.Write), new[] { typeof(ReadOnlySpan<byte>) });
             internal static readonly MethodInfo WriteNil = typeof(MessagePackWriter).GetRuntimeMethod(nameof(MessagePackWriter.WriteNil), Type.EmptyTypes);
-            internal static readonly MethodInfo Write_UInt32 = typeof(MessagePackWriter).GetRuntimeMethod(nameof(MessagePackWriter.Write), new[] { typeof(uint) });
+            internal static readonly MethodInfo WriteUInt32 = typeof(MessagePackWriter).GetRuntimeMethod(nameof(MessagePackWriter.Write), new[] { typeof(uint) });
             internal static readonly MethodInfo WriteRaw = typeof(MessagePackWriter).GetRuntimeMethod(nameof(MessagePackWriter.WriteRaw), new[] { typeof(ReadOnlySpan<byte>) });
             internal static readonly MethodInfo Cache = typeof(MessagePackWriter).GetProperty(nameof(MessagePackWriter.Cache))?.GetMethod;
         }
