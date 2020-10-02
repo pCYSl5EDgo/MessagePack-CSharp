@@ -2056,7 +2056,9 @@ namespace MessagePack.Internal
 
             var constructorParametersArray = constructorParameters.ToArray();
             var canTrack = constructorParametersArray.Length == 0 & isClass;
-            var shouldTrack = ti.GetCustomAttributes<TrackReferenceAttribute>().Any() | (isClass & forceTrackReference);
+            var shouldTrack = ti.GetCustomAttributes<TrackReferenceAttribute>().Any();
+            shouldTrack |= dataContractAttr?.IsReference ?? false;
+            shouldTrack |= isClass & forceTrackReference;
 
             if (!canTrack && shouldTrack)
             {
