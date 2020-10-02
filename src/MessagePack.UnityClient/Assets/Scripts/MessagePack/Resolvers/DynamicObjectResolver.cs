@@ -1173,7 +1173,7 @@ namespace MessagePack.Internal
                 {
                     if (info.IsClass)
                     {
-                        il.Emit(OpCodes.Dup);
+                        il.EmitLdloc(localResult);
                     }
                     else
                     {
@@ -1184,14 +1184,14 @@ namespace MessagePack.Internal
                 }
                 else
                 {
-                    if (info.IsStruct)
+                    if (info.IsClass)
                     {
                         il.EmitLdloc(localResult);
-                        il.Emit(OpCodes.Box, type);
                     }
                     else
                     {
-                        il.Emit(OpCodes.Dup);
+                        il.EmitLdloc(localResult);
+                        il.Emit(OpCodes.Box, type);
                     }
 
                     il.EmitCall(onAfterDeserialize);
