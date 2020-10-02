@@ -280,7 +280,7 @@ namespace MessagePack.Tests
                 var bin = MessagePackSerializer.Serialize(p, ContractlessStandardResolverAllowPrivate.Options);
                 var json = MessagePackSerializer.ConvertToJson(bin);
 
-                json.Is("{\"PublicKey\":100,\"privateKeyS\":\"bar\",\"PublicKeyS\":\"foo\",\"privateKey\":99}");
+                json.Is("{\"0\":{\"PublicKey\":100,\"privateKeyS\":\"bar\",\"PublicKeyS\":\"foo\",\"privateKey\":99}}");
 
                 HasPrivateContractless r2 = MessagePackSerializer.Deserialize<HasPrivateContractless>(bin, ContractlessStandardResolverAllowPrivate.Options);
                 r2.PublicKey.Is(100);

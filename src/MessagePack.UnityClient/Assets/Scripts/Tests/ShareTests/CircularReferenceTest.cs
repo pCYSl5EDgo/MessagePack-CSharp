@@ -23,8 +23,8 @@ namespace MessagePack.Tests
         {
             var original = default(CircleExample);
 
-            var binary = MessagePackSerializer.TypelessCircular.Serialize(original);
-            var result = MessagePackSerializer.TypelessCircular.Deserialize(binary);
+            var binary = MessagePackSerializer.Typeless.Serialize(original);
+            var result = MessagePackSerializer.Typeless.Deserialize(binary);
 
             result.IsNull();
         }
@@ -55,8 +55,8 @@ namespace MessagePack.Tests
         {
             var original = new CircleExample() { Id = id };
 
-            var binary = MessagePackSerializer.TypelessCircular.Serialize(original);
-            var result = (CircleExample)MessagePackSerializer.TypelessCircular.Deserialize(binary);
+            var binary = MessagePackSerializer.Typeless.Serialize(original);
+            var result = (CircleExample)MessagePackSerializer.Typeless.Deserialize(binary);
 
             result.IsNotNull();
             result.Parent.IsNull();
@@ -93,8 +93,8 @@ namespace MessagePack.Tests
             var original = new CircleExample() { Id = id };
             original.Parent = original;
 
-            var binary = MessagePackSerializer.TypelessCircular.Serialize(original);
-            var result = (CircleExample)MessagePackSerializer.TypelessCircular.Deserialize(binary);
+            var binary = MessagePackSerializer.Typeless.Serialize(original);
+            var result = (CircleExample)MessagePackSerializer.Typeless.Deserialize(binary);
 
             result.IsNotNull();
             result.Parent.IsSameReferenceAs(result);
@@ -151,8 +151,8 @@ namespace MessagePack.Tests
             child0.Parent = original;
             child1.Parent = original;
 
-            var binary = MessagePackSerializer.TypelessCircular.Serialize(original);
-            var result = (CircleExample)MessagePackSerializer.TypelessCircular.Deserialize(binary);
+            var binary = MessagePackSerializer.Typeless.Serialize(original);
+            var result = (CircleExample)MessagePackSerializer.Typeless.Deserialize(binary);
 
             Assert.NotNull(result);
             Assert.Null(result.Parent);
@@ -279,8 +279,8 @@ namespace MessagePack.Tests
                 original[i].Child1 = original[i + 1];
             }
 
-            var binary = MessagePackSerializer.TypelessCircular.Serialize(original);
-            var result = (CircleExample[])MessagePackSerializer.TypelessCircular.Deserialize(binary);
+            var binary = MessagePackSerializer.Typeless.Serialize(original);
+            var result = (CircleExample[])MessagePackSerializer.Typeless.Deserialize(binary);
 
             Assert.NotNull(result);
             Assert.Equal(array.Length, result.Length);
@@ -312,8 +312,8 @@ namespace MessagePack.Tests
         {
             var original = default(TwinExample0);
 
-            var binary = MessagePackSerializer.TypelessCircular.Serialize(original);
-            var result = MessagePackSerializer.TypelessCircular.Deserialize(binary);
+            var binary = MessagePackSerializer.Typeless.Serialize(original);
+            var result = MessagePackSerializer.Typeless.Deserialize(binary);
 
             Assert.Null(result);
         }
@@ -334,8 +334,8 @@ namespace MessagePack.Tests
         {
             var original = default(TwinExample1);
 
-            var binary = MessagePackSerializer.TypelessCircular.Serialize(original);
-            var result = MessagePackSerializer.TypelessCircular.Deserialize(binary);
+            var binary = MessagePackSerializer.Typeless.Serialize(original);
+            var result = MessagePackSerializer.Typeless.Deserialize(binary);
 
             Assert.Null(result);
         }
@@ -362,8 +362,8 @@ namespace MessagePack.Tests
         {
             var original = new TwinExample0() { Name = name };
 
-            var binary = MessagePackSerializer.TypelessCircular.Serialize(original);
-            var result = (TwinExample0)MessagePackSerializer.TypelessCircular.Deserialize(binary);
+            var binary = MessagePackSerializer.Typeless.Serialize(original);
+            var result = (TwinExample0)MessagePackSerializer.Typeless.Deserialize(binary);
 
             Assert.NotNull(result);
             Assert.Null(result.Partner);
@@ -392,8 +392,8 @@ namespace MessagePack.Tests
         {
             var original = new TwinExample1() { Name = name };
 
-            var binary = MessagePackSerializer.TypelessCircular.Serialize(original);
-            var result = (TwinExample1)MessagePackSerializer.TypelessCircular.Deserialize(binary);
+            var binary = MessagePackSerializer.Typeless.Serialize(original);
+            var result = (TwinExample1)MessagePackSerializer.Typeless.Deserialize(binary);
 
             Assert.NotNull(result);
             Assert.Null(result.Partner);
@@ -405,15 +405,15 @@ namespace MessagePack.Tests
         [InlineData("名無しの権兵衛", "じゅげむじゅげむごこうのすりきれ")]
         public void MirrorTest(string name0, string name1)
         {
-            var original0 = new TwinExample1() { Name = name0 };
-            var original1 = new TwinExample0()
+            var original1 = new TwinExample1() { Name = name0 };
+            var original0 = new TwinExample0()
             {
                 Name = name1,
-                Partner = original0,
+                Partner = original1,
             };
-            original0.Partner = original1;
+            original1.Partner = original0;
 
-            var binary = MessagePackSerializer.Serialize(original0);
+            var binary = MessagePackSerializer.Serialize(original1);
             var result = MessagePackSerializer.Deserialize<TwinExample1>(binary);
 
             Assert.NotNull(result);
@@ -428,16 +428,16 @@ namespace MessagePack.Tests
         [InlineData("名無しの権兵衛", "じゅげむじゅげむごこうのすりきれ")]
         public void MirrorTestTypeless(string name0, string name1)
         {
-            var original0 = new TwinExample1() { Name = name0 };
-            var original1 = new TwinExample0()
+            var original1 = new TwinExample1() { Name = name0 };
+            var original0 = new TwinExample0()
             {
                 Name = name1,
-                Partner = original0,
+                Partner = original1,
             };
-            original0.Partner = original1;
+            original1.Partner = original0;
 
-            var binary = MessagePackSerializer.TypelessCircular.Serialize(original0);
-            var result = (TwinExample1)MessagePackSerializer.TypelessCircular.Deserialize(binary);
+            var binary = MessagePackSerializer.Typeless.Serialize(original1);
+            var result = (TwinExample1)MessagePackSerializer.Typeless.Deserialize(binary);
 
             Assert.NotNull(result);
             Assert.NotNull(result.Partner);

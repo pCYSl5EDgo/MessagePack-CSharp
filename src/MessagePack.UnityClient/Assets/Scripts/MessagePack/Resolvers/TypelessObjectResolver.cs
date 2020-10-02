@@ -55,50 +55,6 @@ namespace MessagePack.Resolvers
         }
     }
 
-    /// <summary>
-    /// Used for `object` fields/collections, ex: var arr = new object[] { 1, "a", new Model() };
-    /// The runtime type of value in object field, should be covered by one of resolvers in complex/standard resolver.
-    /// Deserializer uses Namespace.TypeName, AssemblyName to get runtime type in destination app, so that combination must be present in destination app.
-    /// Serialized binary is valid MessagePack binary used ext-format and custom typecode(100).
-    /// Inside ext - assembly qualified type name, and serialized object.
-    /// </summary>
-    public sealed class TypelessCircularObjectResolver : IFormatterResolver
-    {
-        public static readonly IFormatterResolver Instance = new TypelessCircularObjectResolver();
-
-        private static readonly IFormatterResolver[] Resolvers = new IFormatterResolver[]
-        {
-            ForceSizePrimitiveObjectResolver.Instance,
-            ContractlessStandardResolverAllowPrivateForceTrackReference.Instance,
-        };
-
-        private TypelessCircularObjectResolver()
-        {
-        }
-
-        /// <inheritdoc />
-        public IMessagePackFormatter<T> GetFormatter<T>()
-        {
-            if (typeof(T) == typeof(object))
-            {
-                return (IMessagePackFormatter<T>)TypelessFormatter.Instance;
-            }
-            else
-            {
-                foreach (IFormatterResolver item in Resolvers)
-                {
-                    IMessagePackFormatter<T> f = item.GetFormatter<T>();
-                    if (f != null)
-                    {
-                        return f;
-                    }
-                }
-
-                return null;
-            }
-        }
-    }
-
     /* helpers for TypelessFormatter */
 
     internal sealed class ForceSizePrimitiveObjectResolver : IFormatterResolver
