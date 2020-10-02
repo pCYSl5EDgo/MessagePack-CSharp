@@ -21,6 +21,8 @@ namespace MessagePack
 
         public Span<object> Span => array.AsSpan(0, count);
 
+        public object this[uint index] => Span[(int)index];
+
         public int Capacity
         {
             get => array.Length;

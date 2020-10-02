@@ -173,11 +173,11 @@ foreach (var objInfo in ObjectSerializationInfos)
             var cache = reader.Cache;
             if (reader.TryReadNil())
             {
-                return (<#= objInfo.FullName #>)cache.Span[(int)reader.ReadUInt32()];
+                return (<#= objInfo.FullName #>)cache[reader.ReadUInt32()];
             }
 
-            var index = (int)reader.ReadUInt32();
             var ____result = new <#= objInfo.FullName #>();
+            var index = (int)reader.ReadUInt32();
             var addedIndex = cache.Add(____result);
             if (index != addedIndex)
             {

@@ -81,6 +81,7 @@ MessagePack.MessagePackReferenceCache.Clone() -> MessagePack.MessagePackReferenc
 MessagePack.MessagePackReferenceCache.Dispose() -> void
 MessagePack.MessagePackReferenceCache.FindIndex(object reference) -> int
 MessagePack.MessagePackReferenceCache.Span.get -> System.Span<object>
+MessagePack.MessagePackReferenceCache.this[uint index].get -> object
 MessagePack.MessagePackWriter.Cache.get -> MessagePack.MessagePackReferenceCache
 MessagePack.MessagePackWriter.Dispose() -> void
 MessagePack.Resolvers.ExpandoObjectResolver

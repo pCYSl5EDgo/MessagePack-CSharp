@@ -212,10 +212,10 @@ foreach (var objInfo in ObjectSerializationInfos)
                     "    var cache = reader.Cache;\r\n            if (reader.TryReadNil())\r\n           " +
                     " {\r\n                return (");
             this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
-            this.Write(")cache.Span[(int)reader.ReadUInt32()];\r\n            }\r\n\r\n            var index = " +
-                    "(int)reader.ReadUInt32();\r\n            var ____result = new ");
+            this.Write(")cache[reader.ReadUInt32()];\r\n            }\r\n\r\n            var ____result = new ");
             this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
             this.Write(@"();
+            var index = (int)reader.ReadUInt32();
             var addedIndex = cache.Add(____result);
             if (index != addedIndex)
             {

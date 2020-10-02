@@ -702,6 +702,55 @@ namespace MessagePack.Internal
             il.EmitCall(getResolverFromOptions);
             il.EmitStloc(localResolver);
 
+            if (info.IsReferenceTracker)
+            {
+                // writer.WriteMapHeader(1);
+                argWriter.EmitLoad();
+                il.EmitLdc_I4(1);
+                il.EmitCall(MessagePackWriterTypeInfo.WriteMapHeader);
+
+                // var cache = writer.Cache;
+                var localCache = il.DeclareLocal(typeof(MessagePackReferenceCache));
+                argWriter.EmitLoad();
+                il.EmitCall(MessagePackWriterTypeInfo.Cache);
+                il.EmitStloc(localCache);
+
+                // var index = cache.FindIndex(value);
+                il.EmitLdloc(localCache);
+                argValue.EmitLoad();
+                il.EmitCall(MessagePackReferenceCacheTypeInfo.FindIndex);
+
+                var localIndex = il.DeclareLocal(typeof(uint));
+                var elseBody = il.DefineLabel();
+                il.EmitStloc(localIndex);
+                il.EmitLdloc(localIndex);
+                il.EmitLdc_I4(0);
+                il.Emit(OpCodes.Blt_S, elseBody);
+
+                // if (index >= 0)
+                // {
+                //     writer.WriteNil();
+                argWriter.EmitLoad();
+                il.EmitCall(MessagePackWriterTypeInfo.WriteNil);
+
+                //     writer.Write((uint)index);
+                argWriter.EmitLoad();
+                il.EmitLdloc(localIndex);
+                il.EmitCall(MessagePackWriterTypeInfo.Write_UInt32);
+
+                //     return;
+                // }
+                il.EmitRet();
+
+                il.MarkLabel(elseBody);
+                // writer.Write((uint)cache.Add(value));
+                argWriter.EmitLoad();
+                il.EmitLdloc(localCache);
+                argValue.EmitLoad();
+                il.EmitCall(MessagePackReferenceCacheTypeInfo.Add);
+                il.EmitCall(MessagePackWriterTypeInfo.Write_UInt32);
+            }
+
             if (info.IsIntKey)
             {
                 // use Array
@@ -851,12 +900,12 @@ namespace MessagePack.Internal
         // T Deserialize([arg:1]ref MessagePackReader reader, [arg:2]MessagePackSerializerOptions options);
         private static void BuildDeserialize(Type type, ObjectSerializationInfo info, ILGenerator il, Func<int, ObjectSerializationInfo.EmittableMember, Action> tryEmitLoadCustomFormatter, int firstArgIndex)
         {
-            var reader = new ArgumentField(il, firstArgIndex, @ref: true);
+            var argReader = new ArgumentField(il, firstArgIndex, @ref: true);
             var argOptions = new ArgumentField(il, firstArgIndex + 1);
 
             // if(reader.TryReadNil()) { return null; }
             Label falseLabel = il.DefineLabel();
-            reader.EmitLdarg();
+            argReader.EmitLdarg();
             il.EmitCall(MessagePackReaderTypeInfo.TryReadNil);
             il.Emit(OpCodes.Brfalse_S, falseLabel);
             if (type.GetTypeInfo().IsClass)
@@ -876,12 +925,75 @@ namespace MessagePack.Internal
             // options.Security.DepthStep(ref reader);
             argOptions.EmitLoad();
             il.EmitCall(getSecurityFromOptions);
-            reader.EmitLdarg();
+            argReader.EmitLdarg();
             il.EmitCall(securityDepthStep);
+
+            // result object
+            var localResult = il.DeclareLocal(type);
+            if (info.IsReferenceTracker)
+            {
+                // if(reader.ReadMapHeader() != 1) { throw new MessagePackSerializationException(); }
+                {
+                    var elseBody = il.DefineLabel();
+                    argReader.EmitLoad();
+                    il.EmitCall(MessagePackReaderTypeInfo.ReadMapHeader);
+                    il.EmitLdc_I4(1);
+                    il.Emit(OpCodes.Beq_S, elseBody);
+
+                    il.ThrowException(typeof(MessagePackSerializationException));
+
+                    il.MarkLabel(elseBody);
+                }
+
+                // var cache = reader.Cache;
+                var localCache = il.DeclareLocal(typeof(MessagePackReferenceCache));
+                argReader.EmitLoad();
+                il.EmitCall(MessagePackReaderTypeInfo.Cache);
+                il.EmitStloc(localCache);
+
+                // if (reader.TryReadNil()) { return (T)cache[reader.ReadUInt32()]; }
+                {
+                    var elseBody = il.DefineLabel();
+                    argReader.EmitLoad();
+                    il.EmitCall(MessagePackReaderTypeInfo.TryReadNil);
+                    il.Emit(OpCodes.Brfalse_S, elseBody);
+
+                    // return (T)cache[reader.ReadUInt32()];
+                    il.EmitLdloc(localCache);
+                    argReader.EmitLoad();
+                    il.EmitCall(MessagePackReaderTypeInfo.ReadUInt32);
+                    il.EmitCall(MessagePackReferenceCacheTypeInfo.GetItem);
+                    il.Emit(OpCodes.Castclass, type);
+                    il.EmitRet();
+
+                    il.MarkLabel(elseBody);
+                }
+
+                // var result = new T();
+                il.Emit(OpCodes.Newobj, info.BestmatchConstructor);
+                il.EmitStloc(localResult);
+
+                // if (cache.Add(result) != (int)reader.ReadUInt32()) { throw new MessagePackSerializationException(); }
+                {
+                    var elseBody = il.DefineLabel();
+
+                    il.EmitLdloc(localCache);
+                    il.EmitLdloc(localResult);
+                    il.EmitCall(MessagePackReferenceCacheTypeInfo.Add);
+
+                    argReader.EmitLoad();
+                    il.EmitCall(MessagePackReaderTypeInfo.ReadUInt32);
+
+                    il.Emit(OpCodes.Beq_S, elseBody);
+                    il.ThrowException(typeof(MessagePackSerializationException));
+
+                    il.MarkLabel(elseBody);
+                }
+            }
 
             // var length = ReadMapHeader(ref byteSequence);
             LocalBuilder length = il.DeclareLocal(typeof(int)); // [loc:1]
-            reader.EmitLdarg();
+            argReader.EmitLdarg();
 
             if (info.IsIntKey)
             {
@@ -970,7 +1082,7 @@ namespace MessagePack.Internal
                     Label readNext = il.DefineLabel();
                     Label loopEnd = il.DefineLabel();
 
-                    reader.EmitLdarg();
+                    argReader.EmitLdarg();
                     il.EmitCall(ReadStringSpan);
                     il.EmitStloc(buffer);
 
@@ -984,7 +1096,7 @@ namespace MessagePack.Internal
                             var i = x.Value;
                             if (infoList[i].MemberInfo != null)
                             {
-                                EmitDeserializeValue(il, infoList[i], i, tryEmitLoadCustomFormatter, reader, argOptions, localResolver);
+                                EmitDeserializeValue(il, infoList[i], i, tryEmitLoadCustomFormatter, argReader, argOptions, localResolver);
                                 il.Emit(OpCodes.Br, loopEnd);
                             }
                             else
@@ -998,7 +1110,7 @@ namespace MessagePack.Internal
                         });
 
                     il.MarkLabel(readNext);
-                    reader.EmitLdarg();
+                    argReader.EmitLdarg();
                     il.EmitCall(MessagePackReaderTypeInfo.Skip);
 
                     il.MarkLabel(loopEnd);
@@ -1024,7 +1136,7 @@ namespace MessagePack.Internal
                     il.MarkLabel(switchDefault);
 
                     // default, only read. reader.ReadNextBlock();
-                    reader.EmitLdarg();
+                    argReader.EmitLdarg();
                     il.EmitCall(MessagePackReaderTypeInfo.Skip);
                     il.Emit(OpCodes.Br, loopEnd);
 
@@ -1040,7 +1152,7 @@ namespace MessagePack.Internal
                         if (item.MemberInfo != null)
                         {
                             il.MarkLabel(item.SwitchLabel);
-                            EmitDeserializeValue(il, item, i++, tryEmitLoadCustomFormatter, reader, argOptions, localResolver);
+                            EmitDeserializeValue(il, item, i++, tryEmitLoadCustomFormatter, argReader, argOptions, localResolver);
                             il.Emit(OpCodes.Br, loopEnd);
                         }
                     }
@@ -1050,7 +1162,7 @@ namespace MessagePack.Internal
             }
 
             // create result object
-            LocalBuilder structLocal = EmitNewObject(il, type, info, infoList);
+            EmitNewObject(il, type, info, infoList, localResult);
 
             // IMessagePackSerializationCallbackReceiver.OnAfterDeserialize()
             if (type.GetTypeInfo().ImplementedInterfaces.Any(x => x == typeof(IMessagePackSerializationCallbackReceiver)))
@@ -1065,7 +1177,7 @@ namespace MessagePack.Internal
                     }
                     else
                     {
-                        il.EmitLdloca(structLocal);
+                        il.EmitLdloca(localResult);
                     }
 
                     il.Emit(OpCodes.Call, runtimeMethods[0]); // don't use EmitCall helper(must use 'Call')
@@ -1074,7 +1186,7 @@ namespace MessagePack.Internal
                 {
                     if (info.IsStruct)
                     {
-                        il.EmitLdloc(structLocal);
+                        il.EmitLdloc(localResult);
                         il.Emit(OpCodes.Box, type);
                     }
                     else
@@ -1087,18 +1199,14 @@ namespace MessagePack.Internal
             }
 
             // reader.Depth--;
-            reader.EmitLdarg();
+            argReader.EmitLdarg();
             il.Emit(OpCodes.Dup);
             il.EmitCall(readerDepthGet);
             il.Emit(OpCodes.Ldc_I4_1);
             il.Emit(OpCodes.Sub_Ovf);
             il.EmitCall(readerDepthSet);
 
-            if (info.IsStruct)
-            {
-                il.Emit(OpCodes.Ldloc, structLocal);
-            }
-
+            il.Emit(OpCodes.Ldloc, localResult);
             il.Emit(OpCodes.Ret);
         }
 
@@ -1158,13 +1266,19 @@ namespace MessagePack.Internal
             il.EmitStloc(info.LocalField);
         }
 
-        private static LocalBuilder EmitNewObject(ILGenerator il, Type type, ObjectSerializationInfo info, DeserializeInfo[] members)
+        private static void EmitNewObject(ILGenerator il, Type type, ObjectSerializationInfo info, DeserializeInfo[] members, LocalBuilder localResult)
         {
             if (info.IsClass)
             {
-                EmitNewObjectConstructorArguments(il, info, members);
-
-                il.Emit(OpCodes.Newobj, info.BestmatchConstructor);
+                if (info.IsReferenceTracker)
+                {
+                    il.EmitLdloc(localResult);
+                }
+                else
+                {
+                    EmitNewObjectConstructorArguments(il, info, members);
+                    il.Emit(OpCodes.Newobj, info.BestmatchConstructor);
+                }
 
                 foreach (DeserializeInfo item in members.Where(x => x.MemberInfo != null && x.MemberInfo.IsWritable))
                 {
@@ -1173,32 +1287,36 @@ namespace MessagePack.Internal
                     item.MemberInfo.EmitStoreValue(il);
                 }
 
-                return null;
-            }
-            else
-            {
-                LocalBuilder result = il.DeclareLocal(type);
-                if (info.BestmatchConstructor == null)
+                if (info.IsReferenceTracker)
                 {
-                    il.Emit(OpCodes.Ldloca, result);
-                    il.Emit(OpCodes.Initobj, type);
+                    il.Emit(OpCodes.Pop);
                 }
                 else
                 {
-                    EmitNewObjectConstructorArguments(il, info, members);
-
-                    il.Emit(OpCodes.Newobj, info.BestmatchConstructor);
-                    il.Emit(OpCodes.Stloc, result);
+                    il.EmitStloc(localResult);
                 }
 
-                foreach (DeserializeInfo item in members.Where(x => x.MemberInfo != null && x.MemberInfo.IsWritable))
-                {
-                    il.EmitLdloca(result);
-                    il.EmitLdloc(item.LocalField);
-                    item.MemberInfo.EmitStoreValue(il);
-                }
+                return;
+            }
 
-                return result; // struct returns local result field
+            if (info.BestmatchConstructor == null)
+            {
+                il.Emit(OpCodes.Ldloca, localResult);
+                il.Emit(OpCodes.Initobj, type);
+            }
+            else
+            {
+                EmitNewObjectConstructorArguments(il, info, members);
+
+                il.Emit(OpCodes.Newobj, info.BestmatchConstructor);
+                il.Emit(OpCodes.Stloc, localResult);
+            }
+
+            foreach (DeserializeInfo item in members.Where(x => x.MemberInfo != null && x.MemberInfo.IsWritable))
+            {
+                il.EmitLdloca(localResult);
+                il.EmitLdloc(item.LocalField);
+                item.MemberInfo.EmitStoreValue(il);
             }
         }
 
@@ -1298,7 +1416,9 @@ namespace MessagePack.Internal
             internal static readonly MethodInfo WriteArrayHeader = typeof(MessagePackWriter).GetRuntimeMethod(nameof(MessagePackWriter.WriteArrayHeader), new[] { typeof(int) });
             internal static readonly MethodInfo WriteBytes = typeof(MessagePackWriter).GetRuntimeMethod(nameof(MessagePackWriter.Write), new[] { typeof(ReadOnlySpan<byte>) });
             internal static readonly MethodInfo WriteNil = typeof(MessagePackWriter).GetRuntimeMethod(nameof(MessagePackWriter.WriteNil), Type.EmptyTypes);
+            internal static readonly MethodInfo Write_UInt32 = typeof(MessagePackWriter).GetRuntimeMethod(nameof(MessagePackWriter.Write), new[] { typeof(uint) });
             internal static readonly MethodInfo WriteRaw = typeof(MessagePackWriter).GetRuntimeMethod(nameof(MessagePackWriter.WriteRaw), new[] { typeof(ReadOnlySpan<byte>) });
+            internal static readonly MethodInfo Cache = typeof(MessagePackWriter).GetProperty(nameof(MessagePackWriter.Cache))?.GetMethod;
         }
 
         internal static class MessagePackReaderTypeInfo
@@ -1309,7 +1429,18 @@ namespace MessagePack.Internal
             internal static readonly MethodInfo ReadMapHeader = typeof(MessagePackReader).GetRuntimeMethod(nameof(MessagePackReader.ReadMapHeader), Type.EmptyTypes);
             internal static readonly MethodInfo ReadBytes = typeof(MessagePackReader).GetRuntimeMethod(nameof(MessagePackReader.ReadBytes), Type.EmptyTypes);
             internal static readonly MethodInfo TryReadNil = typeof(MessagePackReader).GetRuntimeMethod(nameof(MessagePackReader.TryReadNil), Type.EmptyTypes);
+            internal static readonly MethodInfo ReadUInt32 = typeof(MessagePackReader).GetRuntimeMethod(nameof(MessagePackReader.ReadUInt32), Type.EmptyTypes);
             internal static readonly MethodInfo Skip = typeof(MessagePackReader).GetRuntimeMethod(nameof(MessagePackReader.Skip), Type.EmptyTypes);
+            internal static readonly MethodInfo Cache = typeof(MessagePackReader).GetProperty(nameof(MessagePackReader.Cache))?.GetMethod;
+        }
+
+        internal static class MessagePackReferenceCacheTypeInfo
+        {
+            internal static readonly TypeInfo TypeInfo = typeof(MessagePackReferenceCache).GetTypeInfo();
+
+            internal static readonly MethodInfo FindIndex = typeof(MessagePackReferenceCache).GetRuntimeMethod(nameof(MessagePackReferenceCache), new[] { typeof(object) });
+            internal static readonly MethodInfo Add = typeof(MessagePackReferenceCache).GetRuntimeMethod(nameof(MessagePackReferenceCache.Add), new[] { typeof(object) });
+            internal static readonly MethodInfo GetItem = typeof(MessagePackReferenceCache).GetRuntimeMethod("get_Item", new[] { typeof(uint) });
         }
 
         internal static class CodeGenHelpersTypeInfo
@@ -1401,6 +1532,8 @@ namespace MessagePack.Internal
         {
             get { return !this.IsClass; }
         }
+
+        public bool IsReferenceTracker { get; set; }
 
         public ConstructorInfo BestmatchConstructor { get; set; }
 
@@ -1917,12 +2050,21 @@ namespace MessagePack.Internal
                     .ToArray();
             }
 
+            var constructorParametersArray = constructorParameters.ToArray();
+            var canTrack = constructorParametersArray.Length == 0 & isClass;
+            var shouldTrack = ti.GetCustomAttributes<ReferenceTrackerAttribute>().Any();
+            if (!canTrack && shouldTrack)
+            {
+                return null;
+            }
+
             return new ObjectSerializationInfo
             {
                 Type = type,
                 IsClass = isClass,
+                IsReferenceTracker = canTrack & shouldTrack,
                 BestmatchConstructor = ctor,
-                ConstructorParameters = constructorParameters.ToArray(),
+                ConstructorParameters = constructorParametersArray,
                 IsIntKey = isIntKey,
                 Members = members.Where(m => m.IsExplicitContract || constructorParameters.Any(p => p.MemberInfo.Equals(m)) || m.IsWritable).ToArray(),
             };

@@ -163,17 +163,17 @@ foreach (var objInfo in ObjectSerializationInfos)
             var count = reader.ReadMapHeader();
             if (count != 1)
             {
-                throw new MessagePackSerializationException("type <#= objInfo.FullName #> should be encoded as length 1 map. actual: {count}");
+                throw new MessagePackSerializationException($"type <#= objInfo.FullName #> should be encoded as length 1 map. actual: {count}");
             }
 
             var cache = reader.Cache;
             if (reader.TryReadNil())
             {
-                return (<#= objInfo.FullName #>)cache.Span[(int)reader.ReadUInt32()];
+                return (<#= objInfo.FullName #>)cache[reader.ReadUInt32()];
             }
 
-            var index = (int)reader.ReadUInt32();
             var ____result = new <#= objInfo.FullName #>();
+            var index = (int)reader.ReadUInt32();
             var addedIndex = cache.Add(____result);
             if (index != addedIndex)
             {

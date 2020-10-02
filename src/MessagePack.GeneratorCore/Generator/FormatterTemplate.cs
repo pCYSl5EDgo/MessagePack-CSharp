@@ -197,16 +197,16 @@ foreach (var objInfo in ObjectSerializationInfos)
     {
 
             this.Write("            var count = reader.ReadMapHeader();\r\n            if (count != 1)\r\n   " +
-                    "         {\r\n                throw new MessagePackSerializationException(\"type ");
+                    "         {\r\n                throw new MessagePackSerializationException($\"type ");
             this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
             this.Write(" should be encoded as length 1 map. actual: {count}\");\r\n            }\r\n\r\n        " +
                     "    var cache = reader.Cache;\r\n            if (reader.TryReadNil())\r\n           " +
                     " {\r\n                return (");
             this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
-            this.Write(")cache.Span[(int)reader.ReadUInt32()];\r\n            }\r\n\r\n            var index = " +
-                    "(int)reader.ReadUInt32();\r\n            var ____result = new ");
+            this.Write(")cache[reader.ReadUInt32()];\r\n            }\r\n\r\n            var ____result = new ");
             this.Write(this.ToStringHelper.ToStringWithCulture(objInfo.FullName));
             this.Write(@"();
+            var index = (int)reader.ReadUInt32();
             var addedIndex = cache.Add(____result);
             if (index != addedIndex)
             {
