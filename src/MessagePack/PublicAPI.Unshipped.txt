@@ -78,9 +78,18 @@ MessagePack.MessagePackReferenceCache.Dispose() -> void
 MessagePack.MessagePackReferenceCache.FindIndex(object reference) -> int
 MessagePack.MessagePackReferenceCache.Span.get -> System.Span<object>
 MessagePack.MessagePackReferenceCache.this[uint index].get -> object
+MessagePack.MessagePackSerializer.TypelessCircular
 MessagePack.MessagePackWriter.Cache.get -> MessagePack.MessagePackReferenceCache
 MessagePack.MessagePackWriter.Dispose() -> void
+MessagePack.Resolvers.ContractlessStandardResolverAllowPrivateForceTrackReference
+MessagePack.Resolvers.DynamicContractlessObjectResolverAllowPrivateForceTrackReference
+MessagePack.Resolvers.DynamicContractlessObjectResolverAllowPrivateForceTrackReference.DynamicContractlessObjectResolverAllowPrivateForceTrackReference() -> void
+MessagePack.Resolvers.DynamicContractlessObjectResolverAllowPrivateForceTrackReference.GetFormatter<T>() -> MessagePack.Formatters.IMessagePackFormatter<T>
 MessagePack.Resolvers.ExpandoObjectResolver
+MessagePack.Resolvers.TypelessCircularContractlessStandardResolver
+MessagePack.Resolvers.TypelessCircularContractlessStandardResolver.TypelessCircularContractlessStandardResolver() -> void
+MessagePack.Resolvers.TypelessCircularObjectResolver
+MessagePack.Resolvers.TypelessCircularObjectResolver.GetFormatter<T>() -> MessagePack.Formatters.IMessagePackFormatter<T>
 override MessagePack.ImmutableCollection.ImmutableDictionaryFormatter<TKey, TValue>.Add(System.Collections.Immutable.ImmutableDictionary<TKey, TValue>.Builder collection, int index, TKey key, TValue value, MessagePack.MessagePackSerializerOptions options) -> void
 override MessagePack.ImmutableCollection.ImmutableDictionaryFormatter<TKey, TValue>.Complete(System.Collections.Immutable.ImmutableDictionary<TKey, TValue>.Builder intermediateCollection) -> System.Collections.Immutable.ImmutableDictionary<TKey, TValue>
 override MessagePack.ImmutableCollection.ImmutableDictionaryFormatter<TKey, TValue>.Create(int count, MessagePack.MessagePackSerializerOptions options) -> System.Collections.Immutable.ImmutableDictionary<TKey, TValue>.Builder
@@ -124,6 +133,18 @@ override MessagePack.ImmutableCollection.InterfaceImmutableStackFormatter<T>.Com
 override MessagePack.ImmutableCollection.InterfaceImmutableStackFormatter<T>.Create(int count, MessagePack.MessagePackSerializerOptions options) -> T[]
 static MessagePack.MessagePackReferenceCache.Rent(uint minimumLength = 256) -> MessagePack.MessagePackReferenceCache
 static MessagePack.MessagePackReferenceCache.Return(MessagePack.MessagePackReferenceCache cache) -> void
+static MessagePack.MessagePackSerializer.TypelessCircular.DefaultOptions.get -> MessagePack.MessagePackSerializerOptions
+static MessagePack.MessagePackSerializer.TypelessCircular.DefaultOptions.set -> void
+static MessagePack.MessagePackSerializer.TypelessCircular.Deserialize(System.IO.Stream stream, MessagePack.MessagePackSerializerOptions options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> object
+static MessagePack.MessagePackSerializer.TypelessCircular.Deserialize(System.Memory<byte> bytes, MessagePack.MessagePackSerializerOptions options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> object
+static MessagePack.MessagePackSerializer.TypelessCircular.Deserialize(in System.Buffers.ReadOnlySequence<byte> byteSequence, MessagePack.MessagePackSerializerOptions options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> object
+static MessagePack.MessagePackSerializer.TypelessCircular.Deserialize(ref MessagePack.MessagePackReader reader, MessagePack.MessagePackSerializerOptions options = null) -> object
+static MessagePack.MessagePackSerializer.TypelessCircular.DeserializeAsync(System.IO.Stream stream, MessagePack.MessagePackSerializerOptions options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<object>
+static MessagePack.MessagePackSerializer.TypelessCircular.Serialize(System.Buffers.IBufferWriter<byte> writer, object obj, MessagePack.MessagePackSerializerOptions options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> void
+static MessagePack.MessagePackSerializer.TypelessCircular.Serialize(System.IO.Stream stream, object obj, MessagePack.MessagePackSerializerOptions options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> void
+static MessagePack.MessagePackSerializer.TypelessCircular.Serialize(object obj, MessagePack.MessagePackSerializerOptions options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> byte[]
+static MessagePack.MessagePackSerializer.TypelessCircular.Serialize(ref MessagePack.MessagePackWriter writer, object obj, MessagePack.MessagePackSerializerOptions options = null) -> void
+static MessagePack.MessagePackSerializer.TypelessCircular.SerializeAsync(System.IO.Stream stream, object obj, MessagePack.MessagePackSerializerOptions options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task
 static readonly MessagePack.Formatters.ByteMemoryFormatter.Instance -> MessagePack.Formatters.ByteMemoryFormatter
 static readonly MessagePack.Formatters.ByteReadOnlyMemoryFormatter.Instance -> MessagePack.Formatters.ByteReadOnlyMemoryFormatter
 static readonly MessagePack.Formatters.ByteReadOnlySequenceFormatter.Instance -> MessagePack.Formatters.ByteReadOnlySequenceFormatter
@@ -132,6 +153,10 @@ static readonly MessagePack.Formatters.NonGenericInterfaceCollectionFormatter.In
 static readonly MessagePack.Formatters.NonGenericInterfaceEnumerableFormatter.Instance -> MessagePack.Formatters.IMessagePackFormatter<System.Collections.IEnumerable>
 static readonly MessagePack.Formatters.TypeFormatter<T>.Instance -> MessagePack.Formatters.IMessagePackFormatter<T>
 static readonly MessagePack.ImmutableCollection.ImmutableCollectionResolver.Instance -> MessagePack.ImmutableCollection.ImmutableCollectionResolver
+static readonly MessagePack.Resolvers.DynamicContractlessObjectResolverAllowPrivateForceTrackReference.Instance -> MessagePack.Resolvers.DynamicContractlessObjectResolverAllowPrivateForceTrackReference
 static readonly MessagePack.Resolvers.ExpandoObjectResolver.Instance -> MessagePack.IFormatterResolver
 static readonly MessagePack.Resolvers.ExpandoObjectResolver.Options -> MessagePack.MessagePackSerializerOptions
+static readonly MessagePack.Resolvers.TypelessCircularContractlessStandardResolver.Instance -> MessagePack.Resolvers.TypelessCircularContractlessStandardResolver
+static readonly MessagePack.Resolvers.TypelessCircularContractlessStandardResolver.Options -> MessagePack.MessagePackSerializerOptions
+static readonly MessagePack.Resolvers.TypelessCircularObjectResolver.Instance -> MessagePack.IFormatterResolver
 virtual MessagePack.Formatters.PrimitiveObjectFormatter.DeserializeMap(ref MessagePack.MessagePackReader reader, int length, MessagePack.MessagePackSerializerOptions options) -> object

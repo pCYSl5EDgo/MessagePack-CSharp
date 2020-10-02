@@ -296,6 +296,62 @@ namespace MessagePack.Resolvers
             }
         }
     }
+
+    /// <summary>
+    /// ObjectResolver by dynamic code generation, no needs MessagePackObject attribute and serialized key as string, allow private member and track all references.
+    /// </summary>
+    public sealed class DynamicContractlessObjectResolverAllowPrivateForceTrackReference : IFormatterResolver
+    {
+        public static readonly DynamicContractlessObjectResolverAllowPrivateForceTrackReference Instance = new DynamicContractlessObjectResolverAllowPrivateForceTrackReference();
+
+        public IMessagePackFormatter<T> GetFormatter<T>()
+        {
+            return FormatterCache<T>.Formatter;
+        }
+
+        private static class FormatterCache<T>
+        {
+            internal static readonly IMessagePackFormatter<T> Formatter;
+
+            static FormatterCache()
+            {
+                if (typeof(T) == typeof(object))
+                {
+                    return;
+                }
+
+                TypeInfo ti = typeof(T).GetTypeInfo();
+
+                if (ti.IsInterface)
+                {
+                    return;
+                }
+
+                if (ti.IsNullable())
+                {
+                    ti = ti.GenericTypeArguments[0].GetTypeInfo();
+
+                    var innerFormatter = Instance.GetFormatterDynamic(ti.AsType());
+                    if (innerFormatter == null)
+                    {
+                        return;
+                    }
+
+                    Formatter = (IMessagePackFormatter<T>)Activator.CreateInstance(typeof(StaticNullableFormatter<>).MakeGenericType(ti.AsType()), new object[] { innerFormatter });
+                    return;
+                }
+
+                if (ti.IsAnonymous())
+                {
+                    Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeBuilder.BuildFormatterToDynamicMethod(typeof(T), true, true, false, false);
+                }
+                else
+                {
+                    Formatter = (IMessagePackFormatter<T>)DynamicObjectTypeBuilder.BuildFormatterToDynamicMethod(typeof(T), true, true, true, true);
+                }
+            }
+        }
+    }
 }
 
 namespace MessagePack.Internal
