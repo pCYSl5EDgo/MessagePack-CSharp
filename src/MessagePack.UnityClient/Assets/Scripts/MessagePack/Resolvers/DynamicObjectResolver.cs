@@ -922,6 +922,9 @@ namespace MessagePack.Internal
 
             il.MarkLabel(falseLabel);
 
+            var canOverwrite = info.IsReferenceTracker;
+            canOverwrite |= info.IsClass && info.ConstructorParameters.Length == 0;
+
             // result object
             var localResult = il.DeclareLocal(type);
             if (info.IsReferenceTracker)
@@ -988,6 +991,12 @@ namespace MessagePack.Internal
                     il.MarkLabel(elseBody);
                 }
             }
+            else if (canOverwrite)
+            {
+                // var result = new T();
+                il.Emit(OpCodes.Newobj, info.BestmatchConstructor);
+                il.EmitStloc(localResult);
+            }
 
             // options.Security.DepthStep(ref reader);
             argOptions.EmitLoad();
@@ -1028,7 +1037,7 @@ namespace MessagePack.Internal
                             return new DeserializeInfo
                             {
                                 MemberInfo = member,
-                                LocalField = il.DeclareLocal(member.Type),
+                                LocalField = canOverwrite ? default : il.DeclareLocal(member.Type),
                                 SwitchLabel = il.DefineLabel(),
                             };
                         }
@@ -1056,7 +1065,7 @@ namespace MessagePack.Internal
                     .Select(item => new DeserializeInfo
                     {
                         MemberInfo = item,
-                        LocalField = il.DeclareLocal(item.Type),
+                        LocalField = canOverwrite ? default : il.DeclareLocal(item.Type),
                         //// SwitchLabel = il.DefineLabel()
                     })
                     .ToArray();
@@ -1100,7 +1109,7 @@ namespace MessagePack.Internal
                             var i = x.Value;
                             if (infoList[i].MemberInfo != null)
                             {
-                                EmitDeserializeValue(il, infoList[i], i, tryEmitLoadCustomFormatter, argReader, argOptions, localResolver);
+                                EmitDeserializeValue(il, infoList[i], i, tryEmitLoadCustomFormatter, argReader, argOptions, localResolver, canOverwrite, localResult);
                                 il.Emit(OpCodes.Br, loopEnd);
                             }
                             else
@@ -1156,7 +1165,7 @@ namespace MessagePack.Internal
                         if (item.MemberInfo != null)
                         {
                             il.MarkLabel(item.SwitchLabel);
-                            EmitDeserializeValue(il, item, i++, tryEmitLoadCustomFormatter, argReader, argOptions, localResolver);
+                            EmitDeserializeValue(il, item, i++, tryEmitLoadCustomFormatter, argReader, argOptions, localResolver, canOverwrite, localResult);
                             il.Emit(OpCodes.Br, loopEnd);
                         }
                     }
@@ -1166,7 +1175,10 @@ namespace MessagePack.Internal
             }
 
             // create result object
-            EmitNewObject(il, type, info, infoList, localResult);
+            if (!canOverwrite)
+            {
+                EmitNewObject(il, type, info, infoList, localResult);
+            }
 
             // IMessagePackSerializationCallbackReceiver.OnAfterDeserialize()
             if (type.GetTypeInfo().ImplementedInterfaces.Any(x => x == typeof(IMessagePackSerializationCallbackReceiver)))
@@ -1214,12 +1226,18 @@ namespace MessagePack.Internal
             il.Emit(OpCodes.Ret);
         }
 
-        private static void EmitDeserializeValue(ILGenerator il, DeserializeInfo info, int index, Func<int, ObjectSerializationInfo.EmittableMember, Action> tryEmitLoadCustomFormatter, ArgumentField argReader, ArgumentField argOptions, LocalBuilder localResolver)
+        private static void EmitDeserializeValue(ILGenerator il, DeserializeInfo info, int index, Func<int, ObjectSerializationInfo.EmittableMember, Action> tryEmitLoadCustomFormatter, ArgumentField argReader, ArgumentField argOptions, LocalBuilder localResolver, bool canOverwrite, LocalBuilder localResult)
         {
             Label storeLabel = il.DefineLabel();
             ObjectSerializationInfo.EmittableMember member = info.MemberInfo;
             Type t = member.Type;
             Action emitter = tryEmitLoadCustomFormatter(index, member);
+
+            if (canOverwrite && member.IsWritable)
+            {
+                il.EmitLdloc(localResult);
+            }
+
             if (emitter != null)
             {
                 emitter();
@@ -1267,22 +1285,29 @@ namespace MessagePack.Internal
             }
 
             il.MarkLabel(storeLabel);
-            il.EmitStloc(info.LocalField);
+            if (canOverwrite)
+            {
+                if (member.IsWritable)
+                {
+                    member.EmitStoreValue(il);
+                }
+                else
+                {
+                    il.Emit(OpCodes.Pop);
+                }
+            }
+            else
+            {
+                il.EmitStloc(info.LocalField);
+            }
         }
 
         private static void EmitNewObject(ILGenerator il, Type type, ObjectSerializationInfo info, DeserializeInfo[] members, LocalBuilder localResult)
         {
             if (info.IsClass)
             {
-                if (info.IsReferenceTracker)
-                {
-                    il.EmitLdloc(localResult);
-                }
-                else
-                {
-                    EmitNewObjectConstructorArguments(il, info, members);
-                    il.Emit(OpCodes.Newobj, info.BestmatchConstructor);
-                }
+                EmitNewObjectConstructorArguments(il, info, members);
+                il.Emit(OpCodes.Newobj, info.BestmatchConstructor);
 
                 foreach (DeserializeInfo item in members.Where(x => x.MemberInfo != null && x.MemberInfo.IsWritable))
                 {
@@ -1291,15 +1316,7 @@ namespace MessagePack.Internal
                     item.MemberInfo.EmitStoreValue(il);
                 }
 
-                if (info.IsReferenceTracker)
-                {
-                    il.Emit(OpCodes.Pop);
-                }
-                else
-                {
-                    il.EmitStloc(localResult);
-                }
-
+                il.EmitStloc(localResult);
                 return;
             }
 
