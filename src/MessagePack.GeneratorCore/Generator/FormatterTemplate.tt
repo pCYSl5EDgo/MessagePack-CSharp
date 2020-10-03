@@ -237,6 +237,14 @@ foreach (var objInfo in ObjectSerializationInfos)
                         break;
 <#
                 }
+                else if (objInfo.IsReferenceTracker)
+                {
+#>
+                    case <#= member.IntKey #>:
+                        <#= member.GetDeserializeMethodString() #>;
+                        break;
+<#
+                }
             }
             else
             {

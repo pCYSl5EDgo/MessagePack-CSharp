@@ -280,6 +280,16 @@ foreach (var objInfo in ObjectSerializationInfos)
             this.Write(";\r\n                        break;\r\n");
 
                 }
+                else if (objInfo.IsReferenceTracker)
+                {
+
+            this.Write("                    case ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(member.IntKey));
+            this.Write(":\r\n                        ");
+            this.Write(this.ToStringHelper.ToStringWithCulture(member.GetDeserializeMethodString()));
+            this.Write(";\r\n                        break;\r\n");
+
+                }
             }
             else
             {

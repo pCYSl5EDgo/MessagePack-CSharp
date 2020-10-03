@@ -30,16 +30,20 @@ namespace MessagePackCompiler.Generator
 
         private static void Assign(StringBuilder buffer, in MemberInfoTuple member, bool doesAssignMemberDirectly)
         {
+            var memberInfo = member.Info;
             if (doesAssignMemberDirectly)
             {
-                buffer.Append("____result.").Append(member.Info.Name).Append(" = ");
+                if (memberInfo.IsWritable)
+                {
+                    buffer.Append("____result.").Append(memberInfo.Name).Append(" = ");
+                }
             }
             else
             {
-                buffer.Append("__").Append(member.Info.Name).Append("__ = ");
+                buffer.Append("__").Append(memberInfo.Name).Append("__ = ");
             }
 
-            buffer.Append(member.Info.GetDeserializeMethodString()).Append(";\r\n");
+            buffer.Append(memberInfo.GetDeserializeMethodString()).Append(";\r\n");
         }
 
         private static void ClassifyRecursion(StringBuilder buffer, string indent, int tabCount, int keyLength, IEnumerable<MemberInfoTuple> memberCollection, bool doesAssignMemberDirectly)
