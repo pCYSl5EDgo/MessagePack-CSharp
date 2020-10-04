@@ -845,7 +845,7 @@ namespace MessagePack.Internal
                 argOptions.EmitLoad();
                 il.EmitCall(getSerialize(t));
             }
-            else if (IsOptimizeTargetType(t))
+            else if (ObjectSerializationInfo.IsOptimizeTargetType(t))
             {
                 if (!t.GetTypeInfo().IsValueType)
                 {
@@ -1072,10 +1072,14 @@ namespace MessagePack.Internal
             }
 
             // IFormatterResolver resolver = options.Resolver;
-            LocalBuilder localResolver = il.DeclareLocal(typeof(IFormatterResolver));
-            argOptions.EmitLoad();
-            il.EmitCall(getResolverFromOptions);
-            il.EmitStloc(localResolver);
+            var localResolver = default(LocalBuilder);
+            if (info.IsFormatterResolverNeeded)
+            {
+                localResolver = il.DeclareLocal(typeof(IFormatterResolver));
+                argOptions.EmitLoad();
+                il.EmitCall(getResolverFromOptions);
+                il.EmitStloc(localResolver);
+            }
 
             // Read Loop(for var i = 0; i < length; i++)
             if (info.IsStringKey)
@@ -1245,7 +1249,7 @@ namespace MessagePack.Internal
                 argOptions.EmitLoad();
                 il.EmitCall(getDeserialize(t));
             }
-            else if (IsOptimizeTargetType(t))
+            else if (ObjectSerializationInfo.IsOptimizeTargetType(t))
             {
                 if (!t.GetTypeInfo().IsValueType)
                 {
@@ -1357,31 +1361,6 @@ namespace MessagePack.Internal
                     il.Emit(OpCodes.Box, local.MemberInfo.Type);
                 }
             }
-        }
-
-        /// <devremarks>
-        /// Keep this list in sync with ShouldUseFormatterResolverHelper.PrimitiveTypes.
-        /// </devremarks>
-        private static bool IsOptimizeTargetType(Type type)
-        {
-            return type == typeof(Int16)
-                || type == typeof(Int32)
-                || type == typeof(Int64)
-                || type == typeof(UInt16)
-                || type == typeof(UInt32)
-                || type == typeof(UInt64)
-                || type == typeof(Single)
-                || type == typeof(Double)
-                || type == typeof(bool)
-                || type == typeof(byte)
-                || type == typeof(sbyte)
-                || type == typeof(char)
-                || type == typeof(byte[])
-
-            // Do not include types that resolvers are allowed to modify.
-            ////|| type == typeof(DateTime) // OldSpec has no support, so for that and perf reasons a .NET native DateTime resolver exists.
-            ////|| type == typeof(string) // https://github.com/Cysharp/MasterMemory provides custom formatter for string interning.
-            ;
         }
 
 #pragma warning disable SA1311 // Static readonly fields should begin with upper-case letter
@@ -1538,29 +1517,31 @@ namespace MessagePack.Internal
 
     internal class ObjectSerializationInfo
     {
-        public Type Type { get; set; }
+        public Type Type { get; private set; }
 
-        public bool IsIntKey { get; set; }
+        public bool IsIntKey { get; private set; }
 
         public bool IsStringKey
         {
             get { return !this.IsIntKey; }
         }
 
-        public bool IsClass { get; set; }
+        public bool IsClass { get; private set; }
 
         public bool IsStruct
         {
             get { return !this.IsClass; }
         }
 
-        public bool IsReferenceTracker { get; set; }
+        public bool IsReferenceTracker { get; private set; }
 
-        public ConstructorInfo BestmatchConstructor { get; set; }
+        public bool IsFormatterResolverNeeded { get; private set; }
 
-        public EmittableMemberAndConstructorParameter[] ConstructorParameters { get; set; }
+        public ConstructorInfo BestmatchConstructor { get; private set; }
 
-        public EmittableMember[] Members { get; set; }
+        public EmittableMemberAndConstructorParameter[] ConstructorParameters { get; private set; }
+
+        public EmittableMember[] Members { get; private set; }
 
         private ObjectSerializationInfo()
         {
@@ -2082,16 +2063,61 @@ namespace MessagePack.Internal
                 return null;
             }
 
+            var isFormatterResolverNeeded = false;
+            var membersArray = members.Where(m => m.IsExplicitContract || constructorParameters.Any(p => p.MemberInfo.Equals(m)) || m.IsWritable).ToArray();
+            foreach (var member in membersArray)
+            {
+                if (IsOptimizeTargetType(member.Type))
+                {
+                    continue;
+                }
+
+                var attr = member.GetMessagePackFormatterAttribute();
+                if (!(attr is null))
+                {
+                    continue;
+                }
+
+                isFormatterResolverNeeded = true;
+                break;
+            }
+
             return new ObjectSerializationInfo
             {
                 Type = type,
                 IsClass = isClass,
                 IsReferenceTracker = canTrack & shouldTrack,
+                IsFormatterResolverNeeded = isFormatterResolverNeeded,
                 BestmatchConstructor = ctor,
                 ConstructorParameters = constructorParametersArray,
                 IsIntKey = isIntKey,
-                Members = members.Where(m => m.IsExplicitContract || constructorParameters.Any(p => p.MemberInfo.Equals(m)) || m.IsWritable).ToArray(),
+                Members = membersArray,
             };
+        }
+
+        /// <devremarks>
+        /// Keep this list in sync with ShouldUseFormatterResolverHelper.PrimitiveTypes.
+        /// </devremarks>
+        internal static bool IsOptimizeTargetType(Type type)
+        {
+            return type == typeof(Int16)
+                   || type == typeof(Int32)
+                   || type == typeof(Int64)
+                   || type == typeof(UInt16)
+                   || type == typeof(UInt32)
+                   || type == typeof(UInt64)
+                   || type == typeof(Single)
+                   || type == typeof(Double)
+                   || type == typeof(bool)
+                   || type == typeof(byte)
+                   || type == typeof(sbyte)
+                   || type == typeof(char)
+                   || type == typeof(byte[])
+
+                // Do not include types that resolvers are allowed to modify.
+                ////|| type == typeof(DateTime) // OldSpec has no support, so for that and perf reasons a .NET native DateTime resolver exists.
+                ////|| type == typeof(string) // https://github.com/Cysharp/MasterMemory provides custom formatter for string interning.
+                ;
         }
 
         private static IEnumerable<FieldInfo> GetAllFields(Type type)
