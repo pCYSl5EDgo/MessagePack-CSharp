@@ -697,10 +697,14 @@ namespace MessagePack.Internal
             }
 
             // IFormatterResolver resolver = options.Resolver;
-            LocalBuilder localResolver = il.DeclareLocal(typeof(IFormatterResolver));
-            argOptions.EmitLoad();
-            il.EmitCall(getResolverFromOptions);
-            il.EmitStloc(localResolver);
+            var localResolver = default(LocalBuilder);
+            if (info.IsFormatterResolverNeeded)
+            {
+                localResolver = il.DeclareLocal(typeof(IFormatterResolver));
+                argOptions.EmitLoad();
+                il.EmitCall(getResolverFromOptions);
+                il.EmitStloc(localResolver);
+            }
 
             if (info.IsReferenceTracker)
             {
