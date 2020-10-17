@@ -698,7 +698,7 @@ namespace MessagePack.Internal
 
             // IFormatterResolver resolver = options.Resolver;
             var localResolver = default(LocalBuilder);
-            if (info.IsFormatterResolverNeeded)
+            if (info.ShouldUseFormatterResolver)
             {
                 localResolver = il.DeclareLocal(typeof(IFormatterResolver));
                 argOptions.EmitLoad();
@@ -1077,7 +1077,7 @@ namespace MessagePack.Internal
 
             // IFormatterResolver resolver = options.Resolver;
             var localResolver = default(LocalBuilder);
-            if (info.IsFormatterResolverNeeded)
+            if (info.ShouldUseFormatterResolver)
             {
                 localResolver = il.DeclareLocal(typeof(IFormatterResolver));
                 argOptions.EmitLoad();
@@ -1539,7 +1539,7 @@ namespace MessagePack.Internal
 
         public bool IsReferenceTracker { get; private set; }
 
-        public bool IsFormatterResolverNeeded { get; private set; }
+        public bool ShouldUseFormatterResolver { get; private set; }
 
         public ConstructorInfo BestmatchConstructor { get; private set; }
 
@@ -2067,7 +2067,7 @@ namespace MessagePack.Internal
                 return null;
             }
 
-            var isFormatterResolverNeeded = false;
+            var shouldUseFormatterResolver = false;
             var membersArray = members.Where(m => m.IsExplicitContract || constructorParameters.Any(p => p.MemberInfo.Equals(m)) || m.IsWritable).ToArray();
             foreach (var member in membersArray)
             {
@@ -2082,7 +2082,7 @@ namespace MessagePack.Internal
                     continue;
                 }
 
-                isFormatterResolverNeeded = true;
+                shouldUseFormatterResolver = true;
                 break;
             }
 
@@ -2091,7 +2091,7 @@ namespace MessagePack.Internal
                 Type = type,
                 IsClass = isClass,
                 IsReferenceTracker = canTrack & shouldTrack,
-                IsFormatterResolverNeeded = isFormatterResolverNeeded,
+                ShouldUseFormatterResolver = shouldUseFormatterResolver,
                 BestmatchConstructor = ctor,
                 ConstructorParameters = constructorParametersArray,
                 IsIntKey = isIntKey,
